@@ -1,4 +1,5 @@
 import { GlassCard } from '../components/ui';
+import { ChatInterface } from '../components/chat';
 import { Bot, Sparkles, Zap } from 'lucide-react';
 
 const AIConcierge = () => {
@@ -27,11 +28,12 @@ const AIConcierge = () => {
                 ))}
             </div>
 
-            <GlassCard className="p-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">Chat with AI</h2>
-                <div className="h-96 flex items-center justify-center text-gray-400">
-                    AI Chat Interface Coming Soon...
+            <GlassCard className="overflow-hidden">
+                <div className="px-8 py-6 border-b border-[rgba(255,255,255,0.1)]">
+                    <h2 className="text-2xl font-bold text-white">Chat with AI</h2>
+                    <p className="text-sm text-gray-400 mt-1">Powered by Google Gemini</p>
                 </div>
+                <ChatInterface />
             </GlassCard>
         </div>
     );
