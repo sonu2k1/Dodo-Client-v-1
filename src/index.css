@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+/* Custom Theme Variables for Tailwind CSS v4 */
+@theme {
+  /* Colors */
+  --color-dark: #000000;
+
+  --color-neon-blue: #00d4ff;
+  --color-neon-purple: #b400ff;
+  --color-neon-pink: #ff00e5;
+  --color-neon-cyan: #00fff9;
+  --color-neon-green: #00ff88;
+
+  --color-glass-light: rgba(255, 255, 255, 0.05);
+  --color-glass-medium: rgba(255, 255, 255, 0.1);
+  --color-glass-dark: rgba(0, 0, 0, 0.3);
+
+  /* Backdrop Blur */
+  --backdrop-blur-xs: 2px;
+  --backdrop-blur-glass: 12px;
+  --backdrop-blur-glass-heavy: 24px;
+
+  /* Box Shadows - Neon Glows */
+  --shadow-neon-blue: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+  --shadow-neon-purple: 0 0 20px rgba(180, 0, 255, 0.5), 0 0 40px rgba(180, 0, 255, 0.3);
+  --shadow-neon-pink: 0 0 20px rgba(255, 0, 229, 0.5), 0 0 40px rgba(255, 0, 229, 0.3);
+  --shadow-neon-cyan: 0 0 20px rgba(0, 255, 249, 0.5), 0 0 40px rgba(0, 255, 249, 0.3);
+  --shadow-neon-green: 0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3);
+  --shadow-glass: 0 8px 32px 0 rgba(255, 255, 255, 0.1);
+  --shadow-glass-lg: 0 12px 48px 0 rgba(255, 255, 255, 0.15);
+
+  /* Animations */
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Global Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-dark);
+  color: white;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Glassmorphism Utilities */
+.glass-card {
+  backdrop-filter: blur(var(--backdrop-blur-glass));
+  background-color: var(--color-glass-light);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-card-medium {
+  backdrop-filter: blur(var(--backdrop-blur-glass));
+  background-color: var(--color-glass-medium);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-glass-lg);
+}
+
+.glass-card-heavy {
+  backdrop-filter: blur(var(--backdrop-blur-glass-heavy));
+  background: linear-gradient(135deg, var(--color-glass-medium), var(--color-glass-light));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  box-shadow: 0 12px 48px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Neon Glow Effects */
+.glow-blue {
+  box-shadow: var(--shadow-neon-blue);
+}
+
+.glow-purple {
+  box-shadow: var(--shadow-neon-purple);
+}
+
+.glow-pink {
+  box-shadow: var(--shadow-neon-pink);
+}
+
+.glow-cyan {
+  box-shadow: var(--shadow-neon-cyan);
+}
+
+.glow-green {
+  box-shadow: var(--shadow-neon-green);
+}
+
+/* Animated Glow Border */
+.glow-border {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 1rem;
+  padding: 2px;
+  background: linear-gradient(45deg,
+      #00d4ff,
+      #b400ff,
+      #ff00e5,
+      #00fff9,
+      #00d4ff);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  animation: glow-rotate 3s linear infinite;
+}
+
+@keyframes glow-rotate {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+  }
+
+  100% {
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.8), 0 0 60px rgba(0, 212, 255, 0.5);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Liquid Glass Button */
+.btn-glass {
+  backdrop-filter: blur(var(--backdrop-blur-glass));
+  background-color: var(--color-glass-light);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-glass);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.btn-glass:hover {
+  background-color: var(--color-glass-medium);
+  box-shadow: var(--shadow-glass-lg);
+  transform: scale(1.05);
+}
+
+.btn-glass:active {
+  transform: scale(0.95);
+}
+
+.btn-glass-primary {
+  backdrop-filter: blur(var(--backdrop-blur-glass));
+  background-color: var(--color-glass-light);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-neon-blue);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.btn-glass-primary:hover {
+  background-color: var(--color-glass-medium);
+  box-shadow: var(--shadow-neon-blue);
+  transform: scale(1.05);
+}
+
+.btn-glass-primary:active {
+  transform: scale(0.95);
+}
+
+/* Gradient Text */
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(135deg, #00d4ff, #b400ff);
+}
+
+.text-gradient-neon {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(135deg, #00fff9, #ff00e5, #00d4ff);
+}
+
+/* Custom Scrollbar */
+.scrollbar-glass::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-glass::-webkit-scrollbar-track {
+  background-color: var(--color-glass-dark);
+  border-radius: 9999px;
+}
+
+.scrollbar-glass::-webkit-scrollbar-thumb {
+  background-color: var(--color-glass-medium);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+}
+
+.scrollbar-glass::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-glass-light);
+}
+
+/* Custom focus styles for accessibility */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(0, 212, 255, 0.6);
+  outline-offset: 4px;
+}
