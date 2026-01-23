@@ -116,10 +116,24 @@ router.post('/chat', async (req, res) => {
                             break;
 
                         case 'EXPLAIN_CHARGE':
-                        case 'GENERATE_INVOICE':
-                            // For now, pass through the AI's explanation w/ mock success
+                            // In a real app, retrieve specific transaction details to enhance the explanation
                             finalResponse = intentData.response_text;
-                            responseData = { success: true };
+                            responseData = {
+                                success: true,
+                                action: 'lookup_transaction',
+                                details: 'Transaction details retrieved'
+                            };
+                            break;
+
+                        case 'GENERATE_INVOICE':
+                            // Generate a mock PDF URL
+                            const invoiceId = `INV-${Math.floor(Math.random() * 10000)}`;
+                            finalResponse = intentData.response_text || `I've generated invoice #${invoiceId} for you. You can download it below.`;
+                            responseData = {
+                                success: true,
+                                invoice_id: invoiceId,
+                                invoice_url: `/api/documents/${invoiceId}.pdf` // Mock URL
+                            };
                             break;
 
                         default:

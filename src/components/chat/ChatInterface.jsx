@@ -18,8 +18,17 @@ const ChatInterface = () => {
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
-    // Persist session ID across renders
-    const sessionIdRef = useRef('user-session-' + Date.now());
+    // Persist session ID in localStorage to survive reloads
+    const sessionIdRef = useRef('');
+
+    useEffect(() => {
+        let storedSessionId = localStorage.getItem('dodo_session_id');
+        if (!storedSessionId) {
+            storedSessionId = 'user-session-' + Date.now();
+            localStorage.setItem('dodo_session_id', storedSessionId);
+        }
+        sessionIdRef.current = storedSessionId;
+    }, []);
 
     // Auto-scroll to bottom when new messages arrive
     const scrollToBottom = () => {
