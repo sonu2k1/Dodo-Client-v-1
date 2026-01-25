@@ -1,6 +1,7 @@
 import express from 'express';
 import { generateResponse } from '../services/gemini.js';
 import { SYSTEM_PROMPT, formatPrompt } from '../utils/prompts.js';
+import Wallet from '../models/Wallet.js';
 
 const router = express.Router();
 
@@ -22,26 +23,45 @@ router.post('/chat', async (req, res) => {
             });
         }
 
-        // Get or create session
-        if (!sessions.has(sessionId)) {
-            sessions.set(sessionId, {
-                conversationHistory: [],
-                userData: {
-                    balance: 1250.50,
-                    points: 500,
-                    trustScore: 95,
-                    transactions: [
-                        { id: 1, type: 'purchase', amount: -45.00, merchant: 'Whole Foods Market', date: '2024-03-15', category: 'Groceries' },
-                        { id: 2, type: 'purchase', amount: -12.50, merchant: 'Starbucks', date: '2024-03-14', category: 'Food & Drink' },
-                        { id: 3, type: 'deposit', amount: 2000.00, merchant: 'Direct Deposit - Payroll', date: '2024-03-01', category: 'Income' },
-                        { id: 4, type: 'purchase', amount: -120.00, merchant: 'Amazon', date: '2024-02-28', category: 'Shopping' },
-                        { id: 5, type: 'subscription', amount: -15.99, merchant: 'Netflix', date: '2024-02-28', category: 'Entertainment' }
-                    ]
-                },
+        // Get user ID from header or use demo user
+        const userId = req.headers['x-user-id'] || 'demo-user-001';
+
+        // Fetch real wallet data from MongoDB
+        let wallet = await Wallet.findOne({ userId });
+        if (!wallet) {
+            // Create wallet if it doesn't exist
+            wallet = await Wallet.create({
+                userId,
+                balance: 1000,
+                dodoPoints: 50
             });
         }
 
+        // Get or create session with real wallet data
+        if (!sessions.has(sessionId)) {
+            sessions.set(sessionId, {
+                conversationHistory: [],
+                userId,
+            });
+        }
+
+        // Always update userData with fresh wallet data
+        const userData = {
+            balance: wallet.balance,
+            points: wallet.dodoPoints,
+            trustScore: 95,
+            transactions: wallet.history.slice(-10).map((tx, i) => ({
+                id: i + 1,
+                type: tx.type.toLowerCase(),
+                amount: tx.type === 'DEPOSIT' || tx.type === 'EARN' ? tx.amount : -tx.amount,
+                merchant: tx.description || tx.type,
+                date: tx.date ? new Date(tx.date).toISOString().split('T')[0] : 'N/A',
+                category: tx.type
+            }))
+        };
+
         const session = sessions.get(sessionId);
+        session.wallet = wallet; // Store wallet reference for intent handling
 
         // Add user message to history
         session.conversationHistory.push({
@@ -58,7 +78,7 @@ router.post('/chat', async (req, res) => {
         // Format prompt with system instructions and context
         const fullPrompt = `${SYSTEM_PROMPT}\n\n${formatPrompt(message, {
             conversationHistory: session.conversationHistory.slice(0, -1), // Exclude current message
-            userData: session.userData,
+            userData: userData, // Use real wallet data
         })}`;
 
         // Generate AI response
@@ -78,41 +98,48 @@ router.post('/chat', async (req, res) => {
                 if (intentData.type === 'intent') {
                     console.log(`🤖 Detected Intent: ${intentData.intent}`);
 
-                    // Handle Intents
+                    // Handle Intents with real wallet data
                     switch (intentData.intent) {
                         case 'CHECK_BALANCE':
-                            finalResponse = intentData.response_text || `Your current balance is $${session.userData.balance.toFixed(2)}.`;
-                            responseData = { balance: session.userData.balance };
+                            finalResponse = intentData.response_text || `Your current balance is $${userData.balance.toFixed(2)} and you have ${userData.points} DoDo Points.`;
+                            responseData = { balance: userData.balance, points: userData.points };
                             break;
 
                         case 'REDEEM_POINTS':
-                            // Mock redemption logic
-                            const pointsToRedeem = intentData.parameters.amount || 100; // Default or extracted
-                            if (session.userData.points >= pointsToRedeem) {
-                                session.userData.points -= pointsToRedeem;
-                                session.userData.balance += (pointsToRedeem / 10); // Mock conversion rate
-                                finalResponse = `Success! I've redeemed ${pointsToRedeem} points for $${(pointsToRedeem / 10).toFixed(2)}. Your new balance is $${session.userData.balance.toFixed(2)}.`;
+                            // Real redemption logic using MongoDB wallet
+                            const pointsToRedeem = intentData.parameters?.amount || 50;
+                            if (session.wallet.dodoPoints >= pointsToRedeem) {
+                                session.wallet.dodoPoints -= pointsToRedeem;
+                                session.wallet.balance += (pointsToRedeem / 10); // 10 points = $1
+                                session.wallet.history.push({
+                                    type: 'REDEEM',
+                                    amount: pointsToRedeem,
+                                    description: 'Points redeemed via AI Concierge'
+                                });
+                                await session.wallet.save();
+                                finalResponse = `Success! I've redeemed ${pointsToRedeem} points for $${(pointsToRedeem / 10).toFixed(2)}. Your new balance is $${session.wallet.balance.toFixed(2)}.`;
                             } else {
-                                finalResponse = `I'm sorry, you only have ${session.userData.points} points, which isn't enough to redeem ${pointsToRedeem}.`;
+                                finalResponse = `I'm sorry, you only have ${session.wallet.dodoPoints} points, which isn't enough to redeem ${pointsToRedeem}.`;
                             }
                             responseData = {
                                 success: true,
-                                new_points: session.userData.points,
-                                new_balance: session.userData.balance
+                                new_points: session.wallet.dodoPoints,
+                                new_balance: session.wallet.balance
                             };
                             break;
 
                         case 'VIEW_TRANSACTIONS':
                             finalResponse = intentData.response_text || "Here are your recent transactions.";
-                            // In a real app, we might return a rich card here.
-                            // For now, we append the text list if not already in the response_text
-                            if (!finalResponse.includes(session.userData.transactions[0].merchant)) {
-                                const txList = session.userData.transactions.slice(0, 3)
+                            // Use real transaction history from wallet
+                            if (userData.transactions.length > 0) {
+                                const txList = userData.transactions.slice(0, 5)
                                     .map(t => `- ${t.date}: ${t.merchant} ($${Math.abs(t.amount).toFixed(2)})`)
                                     .join('\n');
                                 finalResponse += `\n\n${txList}`;
+                            } else {
+                                finalResponse = "You don't have any transactions yet.";
                             }
-                            responseData = { transactions: session.userData.transactions };
+                            responseData = { transactions: userData.transactions };
                             break;
 
                         case 'EXPLAIN_CHARGE':

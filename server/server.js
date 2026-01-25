@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import aiRoutes from './routes/ai.js';
+import walletRoutes from './routes/wallet.js';
 
 // Load environment variables
 dotenv.config();
@@ -25,6 +27,12 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/ai', aiRoutes);
+app.use('/api/wallet', walletRoutes);
+
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('✅ MongoDB Connected'))
+    .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

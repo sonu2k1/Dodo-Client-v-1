@@ -14,9 +14,9 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 /**
  * Get Gemini model instance
  */
-function getModel() {
+function getModel(modelName = 'gemini-3-flash-preview') {
     return genAI.getGenerativeModel({
-        model: 'gemini-3-flash-preview',
+        model: modelName,
         generationConfig: {
             temperature: 0.7,
             topP: 0.95,
@@ -45,21 +45,48 @@ function getModel() {
 }
 
 /**
- * Generate AI response
+ * Sleep helper for retry delays
+ */
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Generate AI response with retry logic
  * @param {string} prompt - The formatted prompt to send to Gemini
+ * @param {number} maxRetries - Maximum retry attempts (default: 3)
  * @returns {Promise<string>} - AI generated response
  */
-export async function generateResponse(prompt) {
-    try {
-        const model = getModel();
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        return text;
-    } catch (error) {
-        console.error('Gemini API Error:', error);
-        throw new Error('Failed to generate AI response');
+export async function generateResponse(prompt, maxRetries = 3) {
+    let lastError;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const model = getModel();
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+            return text;
+        } catch (error) {
+            lastError = error;
+            console.error(`Gemini API Error (attempt ${attempt}/${maxRetries}):`, error.message);
+
+            // Check if it's a retryable error (503, 429, etc.)
+            if (error.status === 503 || error.status === 429) {
+                if (attempt < maxRetries) {
+                    const delay = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
+                    console.log(`⏳ Retrying in ${delay / 1000}s...`);
+                    await sleep(delay);
+                    continue;
+                }
+            } else {
+                // Non-retryable error, throw immediately
+                throw new Error('Failed to generate AI response: ' + error.message);
+            }
+        }
     }
+
+    throw new Error('Failed to generate AI response after ' + maxRetries + ' attempts: ' + lastError?.message);
 }
 
 /**
