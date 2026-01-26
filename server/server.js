@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import aiRoutes from './routes/ai.js';
 import walletRoutes from './routes/wallet.js';
+import transactionRoutes from './routes/transactions.js';
+import auditRoutes from './routes/audit.js';
 
 // Load environment variables
 dotenv.config();
@@ -28,6 +30,8 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/ai', aiRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/audit', auditRoutes);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)

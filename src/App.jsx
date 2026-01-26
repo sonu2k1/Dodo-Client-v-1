@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { AppLayout } from './components/layout';
 import AIConcierge from './pages/AIConcierge';
 import WalletPage from './pages/WalletPage';
+import TransactionsPage from './pages/TransactionsPage';
+import TrustLogsPage from './pages/TrustLogsPage';
 import { GlassCard } from './components/ui';
 import './App.css';
 
@@ -15,23 +17,9 @@ function App() {
       case 'wallet':
         return <WalletPage />;
       case 'trust-logs':
-        return (
-          <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-gradient-neon">Trust Logs</h1>
-            <GlassCard className="p-8">
-              <p className="text-gray-400">Trust logs coming soon...</p>
-            </GlassCard>
-          </div>
-        );
+        return <TrustLogsPage />;
       case 'transactions':
-        return (
-          <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-gradient-neon">Transactions</h1>
-            <GlassCard className="p-8">
-              <p className="text-gray-400">Transaction history coming soon...</p>
-            </GlassCard>
-          </div>
-        );
+        return <TransactionsPage />;
       case 'settings':
         return (
           <div className="space-y-6">
