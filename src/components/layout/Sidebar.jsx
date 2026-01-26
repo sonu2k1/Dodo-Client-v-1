@@ -79,7 +79,7 @@ const Sidebar = ({
                                     transition={{ duration: 0.2 }}
                                 >
                                     <h1 className="text-xl font-bold text-gradient-neon">
-                                        Dodo Point
+                                        Dodo 
                                     </h1>
                                     <p className="text-xs text-gray-400">Client Concierge</p>
                                 </motion.div>
