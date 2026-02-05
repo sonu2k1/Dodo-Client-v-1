@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, ArrowDownLeft, Filter, RefreshCw } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Filter, RefreshCw, FileText, Loader2 } from 'lucide-react';
 import GlassTable from '../components/ui/GlassTable';
 import GlassCard from '../components/ui/GlassCard';
 import GlassButton from '../components/ui/GlassButton';
+import { InvoiceModal } from '../components/invoice';
+import { useInvoice } from '../hooks/useInvoice';
 
 const TransactionsPage = () => {
     const [transactions, setTransactions] = useState([]);
@@ -13,6 +15,15 @@ const TransactionsPage = () => {
         netBalance: 0
     });
     const [filter, setFilter] = useState('all'); // all, credit, debit
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+    const [generatingInvoice, setGeneratingInvoice] = useState(null);
+
+    const {
+        currentInvoice,
+        generateFromTransaction,
+        regenerateExplanation,
+        loading: invoiceLoading
+    } = useInvoice();
 
     const fetchTransactions = async () => {
         setLoading(true);
@@ -50,6 +61,18 @@ const TransactionsPage = () => {
         fetchTransactions();
         fetchStats();
     }, [filter]);
+
+    const handleGenerateInvoice = async (transactionId) => {
+        setGeneratingInvoice(transactionId);
+        try {
+            await generateFromTransaction(transactionId);
+            setShowInvoiceModal(true);
+        } catch (error) {
+            console.error('Failed to generate invoice:', error);
+        } finally {
+            setGeneratingInvoice(null);
+        }
+    };
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -110,6 +133,25 @@ const TransactionsPage = () => {
             render: (value) => (
                 <span className="text-gray-400 text-sm">{formatDate(value)}</span>
             )
+        },
+        {
+            header: 'Invoice',
+            accessor: 'transactionId',
+            render: (value) => (
+                <button
+                    onClick={() => handleGenerateInvoice(value)}
+                    disabled={generatingInvoice === value}
+                    className="p-2 hover:bg-indigo-500/20 rounded-lg transition-colors
+                             text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
+                    title="Generate Invoice"
+                >
+                    {generatingInvoice === value ? (
+                        <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                        <FileText size={16} />
+                    )}
+                </button>
+            )
         }
     ];
 
@@ -166,8 +208,8 @@ const TransactionsPage = () => {
                         key={type}
                         onClick={() => setFilter(type)}
                         className={`px-4 py-2 rounded-lg transition-all duration-200 capitalize ${filter === type
-                                ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30'
-                                : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                            ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30'
+                            : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                             }`}
                     >
                         {type}
@@ -182,8 +224,18 @@ const TransactionsPage = () => {
                 loading={loading}
                 emptyMessage="No transactions found. Start by adding funds or making purchases!"
             />
+
+            {/* Invoice Modal */}
+            <InvoiceModal
+                isOpen={showInvoiceModal}
+                onClose={() => setShowInvoiceModal(false)}
+                invoice={currentInvoice}
+                onRegenerateExplanation={regenerateExplanation}
+                loading={invoiceLoading}
+            />
         </div>
     );
 };
 
 export default TransactionsPage;
+

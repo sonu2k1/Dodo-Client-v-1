@@ -6,6 +6,8 @@ import aiRoutes from './routes/ai.js';
 import walletRoutes from './routes/wallet.js';
 import transactionRoutes from './routes/transactions.js';
 import auditRoutes from './routes/audit.js';
+import paymentRoutes from './routes/payments.js';
+import invoiceRoutes from './routes/invoices.js';
 
 // Load environment variables
 dotenv.config();
@@ -32,6 +34,8 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)

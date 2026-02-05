@@ -153,13 +153,32 @@ router.post('/chat', async (req, res) => {
                             break;
 
                         case 'GENERATE_INVOICE':
-                            // Generate a mock PDF URL
-                            const invoiceId = `INV-${Math.floor(Math.random() * 10000)}`;
-                            finalResponse = intentData.response_text || `I've generated invoice #${invoiceId} for you. You can download it below.`;
+                            // Signal frontend to show invoice generation UI
+                            finalResponse = intentData.response_text || `I can help you generate an invoice! Please go to the Transactions page and click the invoice icon next to any transaction, or tell me which transaction you'd like an invoice for.`;
                             responseData = {
                                 success: true,
-                                invoice_id: invoiceId,
-                                invoice_url: `/api/documents/${invoiceId}.pdf` // Mock URL
+                                action: 'show_invoice_ui',
+                                transactionId: intentData.parameters?.transactionId || null
+                            };
+                            break;
+
+                        case 'EXPLAIN_INVOICE':
+                            // Provide detailed invoice explanation
+                            finalResponse = intentData.response_text || `Let me break down your invoice:
+
+**Base Charges**: These are the core service or product costs.
+
+**Taxes (GST)**: Goods and Services Tax is a government-mandated tax applied at 18% on most services.
+
+**Discounts**: Any promotional offers or special rates applied to your purchase.
+
+**DoDo Points**: Points you've earned can be redeemed at a rate of 10 points = ₹1. These are applied as discounts on your invoices.
+
+Would you like me to explain a specific invoice in more detail?`;
+                            responseData = {
+                                success: true,
+                                action: 'explain_invoice',
+                                invoiceId: intentData.parameters?.invoiceId || null
                             };
                             break;
 

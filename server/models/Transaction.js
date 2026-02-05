@@ -27,7 +27,7 @@ const TransactionSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ['deposit', 'withdrawal', 'purchase', 'refund', 'points_earned', 'points_redeemed', 'other'],
+        enum: ['deposit', 'withdrawal', 'purchase', 'refund', 'points_earned', 'points_redeemed', 'payment', 'other'],
         default: 'other'
     },
     status: {

@@ -20,7 +20,7 @@ const WalletSchema = new mongoose.Schema({
     history: [{
         type: {
             type: String,
-            enum: ['EARN', 'REDEEM', 'DEPOSIT', 'PURCHASE'],
+            enum: ['EARN', 'REDEEM', 'DEPOSIT', 'PURCHASE', 'PAYMENT'],
             required: true
         },
         amount: {

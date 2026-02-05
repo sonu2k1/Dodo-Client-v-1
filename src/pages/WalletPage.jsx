@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import WalletCard from '../components/wallet/WalletCard';
 import TransactionHistory from '../components/wallet/TransactionHistory';
+import { AddFundsModal } from '../components/payment';
 
 const WalletPage = () => {
     const [walletData, setWalletData] = useState({
@@ -9,6 +10,7 @@ const WalletPage = () => {
         history: []
     });
     const [loading, setLoading] = useState(true);
+    const [showAddFundsModal, setShowAddFundsModal] = useState(false);
 
     const fetchWallet = async () => {
         try {
@@ -32,25 +34,15 @@ const WalletPage = () => {
         fetchWallet();
     }, []);
 
-    const handleAddFunds = async () => {
-        // Demo functionality
-        try {
-            await fetch('http://localhost:3001/api/wallet/earn', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-user-id': 'demo-user-001'
-                },
-                body: JSON.stringify({
-                    type: 'balance',
-                    amount: 100,
-                    description: 'Demo Deposit'
-                })
-            });
-            fetchWallet();
-        } catch (error) {
-            console.error('Error adding funds:', error);
-        }
+    const handleAddFunds = () => {
+        // Open Razorpay payment modal
+        setShowAddFundsModal(true);
+    };
+
+    const handlePaymentSuccess = (result) => {
+        console.log('Payment successful:', result);
+        // Refresh wallet data after successful payment
+        fetchWallet();
     };
 
     const handleRedeem = async () => {
@@ -92,8 +84,16 @@ const WalletPage = () => {
             />
 
             <TransactionHistory transactions={walletData.history.slice().reverse()} />
+
+            {/* Add Funds Modal with Razorpay */}
+            <AddFundsModal
+                isOpen={showAddFundsModal}
+                onClose={() => setShowAddFundsModal(false)}
+                onSuccess={handlePaymentSuccess}
+            />
         </div>
     );
 };
 
 export default WalletPage;
+
