@@ -6,7 +6,8 @@ import { generateResponse } from '../services/gemini.js';
 
 const router = express.Router();
 
-const getUserId = (req) => req.headers['x-user-id'] || 'demo-user-001';
+// Get user ID from authenticated request
+const getUserId = (req) => req.user?.id;
 
 // Helper to create audit log
 export async function createAuditLog(data) {

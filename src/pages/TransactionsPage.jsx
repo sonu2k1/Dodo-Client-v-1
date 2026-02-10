@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowUpRight, ArrowDownLeft, Filter, RefreshCw, FileText, Loader2 } from 'lucide-react';
 import GlassTable from '../components/ui/GlassTable';
 import GlassCard from '../components/ui/GlassCard';
 import GlassButton from '../components/ui/GlassButton';
 import { InvoiceModal } from '../components/invoice';
 import { useInvoice } from '../hooks/useInvoice';
+import { useAuth } from '../context/AuthContext';
 
 const TransactionsPage = () => {
+    const { authFetch, isAuthenticated } = useAuth();
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
@@ -25,13 +27,13 @@ const TransactionsPage = () => {
         loading: invoiceLoading
     } = useInvoice();
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = useCallback(async () => {
+        if (!isAuthenticated) return;
+
         setLoading(true);
         try {
             const typeParam = filter !== 'all' ? `?type=${filter}` : '';
-            const response = await fetch(`http://localhost:3001/api/transactions${typeParam}`, {
-                headers: { 'x-user-id': 'demo-user-001' }
-            });
+            const response = await authFetch(`http://localhost:3001/api/transactions${typeParam}`);
             if (response.ok) {
                 const data = await response.json();
                 setTransactions(data.transactions || []);
@@ -41,13 +43,13 @@ const TransactionsPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [authFetch, isAuthenticated, filter]);
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
+        if (!isAuthenticated) return;
+
         try {
-            const response = await fetch('http://localhost:3001/api/transactions/stats/summary', {
-                headers: { 'x-user-id': 'demo-user-001' }
-            });
+            const response = await authFetch('http://localhost:3001/api/transactions/stats/summary');
             if (response.ok) {
                 const data = await response.json();
                 setStats(data);
@@ -55,12 +57,12 @@ const TransactionsPage = () => {
         } catch (error) {
             console.error('Failed to fetch stats:', error);
         }
-    };
+    }, [authFetch, isAuthenticated]);
 
     useEffect(() => {
         fetchTransactions();
         fetchStats();
-    }, [filter]);
+    }, [fetchTransactions, fetchStats]);
 
     const handleGenerateInvoice = async (transactionId) => {
         setGeneratingInvoice(transactionId);
@@ -238,4 +240,3 @@ const TransactionsPage = () => {
 };
 
 export default TransactionsPage;
-

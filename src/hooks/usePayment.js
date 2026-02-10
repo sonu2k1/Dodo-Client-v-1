@@ -1,12 +1,15 @@
 import { useState, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE = 'http://localhost:3001/api';
 
 /**
  * Custom hook for Razorpay payment operations
  * Handles payment order creation, verification, and Razorpay checkout
+ * Uses authenticated fetch for all API calls
  */
 export const usePayment = () => {
+    const { authFetch, isAuthenticated, user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [lastPayment, setLastPayment] = useState(null);
@@ -43,6 +46,10 @@ export const usePayment = () => {
      * @returns {Promise<Object>} Order details
      */
     const createOrder = useCallback(async (amount, currency = 'INR') => {
+        if (!isAuthenticated) {
+            throw new Error('Authentication required');
+        }
+
         setLoading(true);
         setError(null);
 
@@ -51,11 +58,10 @@ export const usePayment = () => {
             const amountInPaise = Math.round(amount * 100);
             const idempotencyKey = generateIdempotencyKey();
 
-            const response = await fetch(`${API_BASE}/payments/create-order`, {
+            const response = await authFetch(`${API_BASE}/payments/create-order`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-user-id': 'demo-user-001'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     amount: amountInPaise,
@@ -77,7 +83,7 @@ export const usePayment = () => {
         } finally {
             setLoading(false);
         }
-    }, [generateIdempotencyKey]);
+    }, [authFetch, isAuthenticated, generateIdempotencyKey]);
 
     /**
      * Verify payment after Razorpay callback
@@ -85,15 +91,18 @@ export const usePayment = () => {
      * @returns {Promise<Object>} Verification result
      */
     const verifyPayment = useCallback(async (paymentData) => {
+        if (!isAuthenticated) {
+            throw new Error('Authentication required');
+        }
+
         setLoading(true);
         setError(null);
 
         try {
-            const response = await fetch(`${API_BASE}/payments/verify`, {
+            const response = await authFetch(`${API_BASE}/payments/verify`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-user-id': 'demo-user-001'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(paymentData)
             });
@@ -112,7 +121,7 @@ export const usePayment = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [authFetch, isAuthenticated]);
 
     /**
      * Initiate payment flow
@@ -121,6 +130,10 @@ export const usePayment = () => {
      * @returns {Promise<Object>} Payment result
      */
     const initiatePayment = useCallback(async (amount, options = {}) => {
+        if (!isAuthenticated) {
+            throw new Error('Authentication required');
+        }
+
         setLoading(true);
         setError(null);
 
@@ -141,9 +154,9 @@ export const usePayment = () => {
                     description: options.description || 'Add Funds to Wallet',
                     order_id: orderData.orderId,
                     prefill: {
-                        name: options.prefillName || '',
-                        email: options.prefillEmail || '',
-                        contact: options.prefillContact || ''
+                        name: options.prefillName || user?.name || '',
+                        email: options.prefillEmail || user?.email || '',
+                        contact: options.prefillContact || user?.phone || ''
                     },
                     theme: {
                         color: options.themeColor || '#6366f1'
@@ -180,7 +193,7 @@ export const usePayment = () => {
             setLoading(false);
             throw err;
         }
-    }, [loadRazorpayScript, createOrder, verifyPayment]);
+    }, [loadRazorpayScript, createOrder, verifyPayment, isAuthenticated, user]);
 
     /**
      * Get payment history
@@ -188,16 +201,16 @@ export const usePayment = () => {
      * @returns {Promise<Object>} Payment history
      */
     const getPaymentHistory = useCallback(async (params = {}) => {
+        if (!isAuthenticated) {
+            throw new Error('Authentication required');
+        }
+
         setLoading(true);
         setError(null);
 
         try {
             const queryParams = new URLSearchParams(params).toString();
-            const response = await fetch(`${API_BASE}/payments?${queryParams}`, {
-                headers: {
-                    'x-user-id': 'demo-user-001'
-                }
-            });
+            const response = await authFetch(`${API_BASE}/payments?${queryParams}`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch payment history');
@@ -210,7 +223,7 @@ export const usePayment = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [authFetch, isAuthenticated]);
 
     /**
      * Get payment configuration

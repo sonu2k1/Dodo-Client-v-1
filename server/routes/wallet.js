@@ -3,11 +3,9 @@ import Wallet from '../models/Wallet.js';
 
 const router = express.Router();
 
-// Middleware to simulate user authentication for demo
-// In production, this would use actual auth middleware
+// Get user ID from authenticated request
 const getUserId = (req) => {
-    // For now, consistent demo user
-    return req.headers['x-user-id'] || 'demo-user-001';
+    return req.user?.id;
 };
 
 // Get Wallet Details
@@ -20,8 +18,8 @@ router.get('/', async (req, res) => {
             // Create initial wallet if not exists
             wallet = await Wallet.create({
                 userId,
-                balance: 1000, // Initial demo balance
-                dodoPoints: 50 // Initial demo points
+                balance: 0,
+                dodoPoints: 100 // Welcome bonus
             });
         }
 
@@ -32,7 +30,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Earn Points/Money (Demo Endpoint)
+// Earn Points/Money
 router.post('/earn', async (req, res) => {
     try {
         const userId = getUserId(req);

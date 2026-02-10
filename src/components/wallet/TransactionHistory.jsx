@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowUpRight, ArrowDownLeft, RefreshCcw } from 'lucide-react';
 import GlassCard from '../ui/GlassCard';
+import MotionList, { MotionItem } from '../ui/MotionList';
 
 const TransactionHistory = ({ transactions = [] }) => {
     const getIcon = (type) => {
@@ -29,19 +30,19 @@ const TransactionHistory = ({ transactions = [] }) => {
         <GlassCard className="p-6">
             <h3 className="text-xl font-bold text-white mb-6">Transaction History</h3>
 
-            <div className="space-y-4">
+            <MotionList className="space-y-4">
                 {transactions.length === 0 ? (
                     <p className="text-gray-400 text-center py-4">No transactions yet</p>
                 ) : (
                     transactions.map((tx, index) => (
-                        <div
+                        <MotionItem
                             key={index}
-                            className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10"
+                            className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
                         >
                             <div className="flex items-center gap-4">
                                 <div className={`p-2 rounded-lg ${tx.type === 'DEPOSIT' || tx.type === 'EARN'
-                                        ? 'bg-neon-green/10'
-                                        : 'bg-neon-pink/10'
+                                    ? 'bg-neon-green/10'
+                                    : 'bg-neon-pink/10'
                                     }`}>
                                     {getIcon(tx.type)}
                                 </div>
@@ -51,8 +52,8 @@ const TransactionHistory = ({ transactions = [] }) => {
                                 </div>
                             </div>
                             <div className={`font-bold ${tx.type === 'DEPOSIT' || tx.type === 'EARN'
-                                    ? 'text-neon-green'
-                                    : 'text-white'
+                                ? 'text-neon-green'
+                                : 'text-white'
                                 }`}>
                                 {tx.type === 'DEPOSIT' || tx.type === 'EARN' ? '+' : '-'}
                                 {tx.type === 'EARN' || tx.type === 'REDEEM'
@@ -60,10 +61,10 @@ const TransactionHistory = ({ transactions = [] }) => {
                                     : `$${tx.amount.toFixed(2)}`
                                 }
                             </div>
-                        </div>
+                        </MotionItem>
                     ))
                 )}
-            </div>
+            </MotionList>
         </GlassCard>
     );
 };

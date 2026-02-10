@@ -1,12 +1,17 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import {
     Bell,
     Search,
     User,
     Menu,
-    X
+    X,
+    LogOut,
+    Settings,
+    ChevronDown
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Navbar - Glass top navigation bar component
@@ -21,6 +26,14 @@ const Navbar = ({
     isMobileMenuOpen,
     onToggleMobileMenu
 }) => {
+    const { user, logout, isAuthenticated } = useAuth();
+    const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+    const handleLogout = async () => {
+        await logout();
+        setShowProfileMenu(false);
+    };
+
     return (
         <motion.nav
             initial={{ y: -80 }}
@@ -109,9 +122,11 @@ const Navbar = ({
                         </span>
                     </button>
 
-                    {/* Profile */}
-                    <button
-                        className="
+                    {/* Profile Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowProfileMenu(!showProfileMenu)}
+                            className="
               flex items-center gap-3 pl-2 pr-4 py-2 rounded-xl
               backdrop-blur-[20px] bg-[rgba(255,255,255,0.05)]
               border border-[rgba(255,255,255,0.12)]
@@ -120,19 +135,71 @@ const Navbar = ({
               hover:shadow-[0_0_20px_rgba(0,255,249,0.2)]
               transition-all duration-300
             "
-                    >
-                        <div className="
+                        >
+                            <div className="
               w-8 h-8 rounded-lg
               bg-gradient-to-br from-neon-cyan to-neon-purple
               flex items-center justify-center
             ">
-                            <User size={18} className="text-white" />
-                        </div>
-                        <div className="hidden sm:block text-left">
-                            <p className="text-sm font-medium text-white">John Doe</p>
-                            <p className="text-xs text-gray-400">Premium User</p>
-                        </div>
-                    </button>
+                                <User size={18} className="text-white" />
+                            </div>
+                            <div className="hidden sm:block text-left">
+                                <p className="text-sm font-medium text-white">
+                                    {user?.name || 'Guest'}
+                                </p>
+                                <p className="text-xs text-gray-400 capitalize">
+                                    {user?.role || 'User'}
+                                </p>
+                            </div>
+                            <ChevronDown
+                                size={16}
+                                className={`text-gray-400 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        <AnimatePresence>
+                            {showProfileMenu && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute right-0 mt-2 w-56 py-2 rounded-xl
+                                        backdrop-blur-[24px] bg-[rgba(20,20,20,0.95)]
+                                        border border-[rgba(255,255,255,0.12)]
+                                        shadow-2xl"
+                                >
+                                    {/* User Info */}
+                                    <div className="px-4 py-3 border-b border-white/10">
+                                        <p className="text-white font-medium">{user?.name}</p>
+                                        <p className="text-gray-400 text-sm">{user?.email}</p>
+                                    </div>
+
+                                    {/* Menu Items */}
+                                    <div className="py-2">
+                                        <button
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-left
+                                                text-gray-300 hover:text-white hover:bg-white/5
+                                                transition-colors"
+                                        >
+                                            <Settings size={18} />
+                                            <span>Settings</span>
+                                        </button>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-left
+                                                text-red-400 hover:text-red-300 hover:bg-red-500/10
+                                                transition-colors"
+                                        >
+                                            <LogOut size={18} />
+                                            <span>Sign Out</span>
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
             </div>
         </motion.nav>
@@ -146,3 +213,4 @@ Navbar.propTypes = {
 };
 
 export default Navbar;
+

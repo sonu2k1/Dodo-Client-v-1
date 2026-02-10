@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Search, MessageCircle, Clock, AlertCircle, CheckCircle, Send, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassCard from '../components/ui/GlassCard';
 import GlassButton from '../components/ui/GlassButton';
 import GlassTable from '../components/ui/GlassTable';
+import { useAuth } from '../context/AuthContext';
 
 const TrustLogsPage = () => {
+    const { authFetch, isAuthenticated } = useAuth();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ totalLogs: 0, byCategory: {} });
@@ -15,13 +17,13 @@ const TrustLogsPage = () => {
     const [explaining, setExplaining] = useState(false);
     const [filter, setFilter] = useState('all');
 
-    const fetchLogs = async () => {
+    const fetchLogs = useCallback(async () => {
+        if (!isAuthenticated) return;
+
         setLoading(true);
         try {
             const categoryParam = filter !== 'all' ? `?category=${filter}` : '';
-            const response = await fetch(`http://localhost:3001/api/audit${categoryParam}`, {
-                headers: { 'x-user-id': 'demo-user-001' }
-            });
+            const response = await authFetch(`http://localhost:3001/api/audit${categoryParam}`);
             if (response.ok) {
                 const data = await response.json();
                 setLogs(data.logs || []);
@@ -31,13 +33,13 @@ const TrustLogsPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [authFetch, isAuthenticated, filter]);
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
+        if (!isAuthenticated) return;
+
         try {
-            const response = await fetch('http://localhost:3001/api/audit/summary/stats', {
-                headers: { 'x-user-id': 'demo-user-001' }
-            });
+            const response = await authFetch('http://localhost:3001/api/audit/summary/stats');
             if (response.ok) {
                 const data = await response.json();
                 setStats(data);
@@ -45,22 +47,21 @@ const TrustLogsPage = () => {
         } catch (error) {
             console.error('Failed to fetch stats:', error);
         }
-    };
+    }, [authFetch, isAuthenticated]);
 
     useEffect(() => {
         fetchLogs();
         fetchStats();
-    }, [filter]);
+    }, [fetchLogs, fetchStats]);
 
     const askWhyCharged = async () => {
-        if (!question.trim()) return;
+        if (!question.trim() || !isAuthenticated) return;
         setExplaining(true);
         try {
-            const response = await fetch('http://localhost:3001/api/audit/explain', {
+            const response = await authFetch('http://localhost:3001/api/audit/explain', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-user-id': 'demo-user-001'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ question })
             });
@@ -133,9 +134,9 @@ const TrustLogsPage = () => {
             accessor: 'category',
             render: (value) => (
                 <span className={`px-2 py-1 rounded-lg text-xs capitalize ${value === 'financial' ? 'bg-neon-green/20 text-neon-green' :
-                        value === 'security' ? 'bg-neon-pink/20 text-neon-pink' :
-                            value === 'ai' ? 'bg-neon-cyan/20 text-neon-cyan' :
-                                'bg-white/10 text-gray-300'
+                    value === 'security' ? 'bg-neon-pink/20 text-neon-pink' :
+                        value === 'ai' ? 'bg-neon-cyan/20 text-neon-cyan' :
+                            'bg-white/10 text-gray-300'
                     }`}>
                     {value}
                 </span>
@@ -179,19 +180,19 @@ const TrustLogsPage = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <GlassCard className="p-4">
+                <GlassCard className="p-4" hover>
                     <div className="text-gray-400 text-sm mb-1">Total Logs</div>
                     <div className="text-2xl font-bold text-white">{stats.totalLogs}</div>
                 </GlassCard>
-                <GlassCard className="p-4" glowColor="green">
+                <GlassCard className="p-4" glowColor="green" hover>
                     <div className="text-gray-400 text-sm mb-1">Financial</div>
                     <div className="text-2xl font-bold text-neon-green">{stats.byCategory?.financial || 0}</div>
                 </GlassCard>
-                <GlassCard className="p-4" glowColor="pink">
+                <GlassCard className="p-4" glowColor="pink" hover>
                     <div className="text-gray-400 text-sm mb-1">Security</div>
                     <div className="text-2xl font-bold text-neon-pink">{stats.byCategory?.security || 0}</div>
                 </GlassCard>
-                <GlassCard className="p-4" glowColor="cyan">
+                <GlassCard className="p-4" glowColor="cyan" hover>
                     <div className="text-gray-400 text-sm mb-1">AI Queries</div>
                     <div className="text-2xl font-bold text-neon-cyan">{stats.byCategory?.ai || 0}</div>
                 </GlassCard>
@@ -204,8 +205,8 @@ const TrustLogsPage = () => {
                         key={cat}
                         onClick={() => setFilter(cat)}
                         className={`px-4 py-2 rounded-lg transition-all duration-200 capitalize text-sm ${filter === cat
-                                ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30'
-                                : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                            ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30'
+                            : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                             }`}
                     >
                         {cat}

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import WalletCard from '../components/wallet/WalletCard';
 import TransactionHistory from '../components/wallet/TransactionHistory';
 import { AddFundsModal } from '../components/payment';
+import { useAuth } from '../context/AuthContext';
 
 const WalletPage = () => {
+    const { authFetch, isAuthenticated } = useAuth();
     const [walletData, setWalletData] = useState({
         balance: 0,
         dodoPoints: 0,
@@ -12,13 +14,11 @@ const WalletPage = () => {
     const [loading, setLoading] = useState(true);
     const [showAddFundsModal, setShowAddFundsModal] = useState(false);
 
-    const fetchWallet = async () => {
+    const fetchWallet = useCallback(async () => {
+        if (!isAuthenticated) return;
+
         try {
-            const response = await fetch('http://localhost:3001/api/wallet', {
-                headers: {
-                    'x-user-id': 'demo-user-001' // Mock ID matching backend
-                }
-            });
+            const response = await authFetch('http://localhost:3001/api/wallet');
             if (response.ok) {
                 const data = await response.json();
                 setWalletData(data);
@@ -28,11 +28,11 @@ const WalletPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [authFetch, isAuthenticated]);
 
     useEffect(() => {
         fetchWallet();
-    }, []);
+    }, [fetchWallet]);
 
     const handleAddFunds = () => {
         // Open Razorpay payment modal
@@ -46,13 +46,13 @@ const WalletPage = () => {
     };
 
     const handleRedeem = async () => {
-        // Demo functionality
+        if (!isAuthenticated) return;
+
         try {
-            await fetch('http://localhost:3001/api/wallet/redeem', {
+            await authFetch('http://localhost:3001/api/wallet/redeem', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-user-id': 'demo-user-001'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     points: 50,
@@ -96,4 +96,3 @@ const WalletPage = () => {
 };
 
 export default WalletPage;
-

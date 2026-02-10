@@ -250,3 +250,182 @@ a:focus-visible {
   outline: 2px solid rgba(0, 212, 255, 0.6);
   outline-offset: 4px;
 }
+
+/* ============================================
+   PREMIUM HOVER GLOW EFFECTS
+   ============================================ */
+
+.hover-glow-blue {
+  transition: box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hover-glow-blue:hover {
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.5), 0 0 60px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.05);
+}
+
+.hover-glow-purple {
+  transition: box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hover-glow-purple:hover {
+  box-shadow: 0 0 30px rgba(180, 0, 255, 0.5), 0 0 60px rgba(180, 0, 255, 0.3), inset 0 0 20px rgba(180, 0, 255, 0.05);
+}
+
+.hover-glow-pink {
+  transition: box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hover-glow-pink:hover {
+  box-shadow: 0 0 30px rgba(255, 0, 229, 0.5), 0 0 60px rgba(255, 0, 229, 0.3), inset 0 0 20px rgba(255, 0, 229, 0.05);
+}
+
+.hover-glow-cyan {
+  transition: box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hover-glow-cyan:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 249, 0.5), 0 0 60px rgba(0, 255, 249, 0.3), inset 0 0 20px rgba(0, 255, 249, 0.05);
+}
+
+.hover-glow-green {
+  transition: box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hover-glow-green:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.5), 0 0 60px rgba(0, 255, 136, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.05);
+}
+
+/* ============================================
+   FLOATING ANIMATION
+   ============================================ */
+
+.float-gentle {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+@keyframes float-gentle {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(0.5deg);
+  }
+}
+
+/* ============================================
+   SHIMMER EFFECT
+   ============================================ */
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%);
+  transform: translateX(-100%);
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================
+   GLOW PULSE ANIMATION
+   ============================================ */
+
+.glow-pulse-blue {
+  animation: glow-pulse-blue 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse-blue {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 0 35px rgba(0, 212, 255, 0.5), 0 0 70px rgba(0, 212, 255, 0.25);
+  }
+}
+
+.glow-pulse-purple {
+  animation: glow-pulse-purple 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse-purple {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(180, 0, 255, 0.3), 0 0 40px rgba(180, 0, 255, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 0 35px rgba(180, 0, 255, 0.5), 0 0 70px rgba(180, 0, 255, 0.25);
+  }
+}
+
+/* ============================================
+   GPU ACCELERATION HINTS
+   ============================================ */
+
+.gpu-accelerated {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ============================================
+   SMOOTH TRANSITIONS UTILITIES
+   ============================================ */
+
+.transition-premium {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-bounce {
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================================
+   ACCESSIBILITY: REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .float-gentle,
+  .shimmer::after,
+  .glow-pulse-blue,
+  .glow-pulse-purple {
+    animation: none;
+  }
+}

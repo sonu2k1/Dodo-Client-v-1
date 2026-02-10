@@ -8,15 +8,21 @@ import AuditLog from '../models/AuditLog.js';
 
 const router = express.Router();
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+// Lazy-initialize Razorpay instance (only when needed & configured)
+let razorpay = null;
+const getRazorpay = () => {
+    if (!razorpay && process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+        razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET
+        });
+    }
+    return razorpay;
+};
 
-// Get user ID from header (same pattern as other routes)
+// Get user ID from authenticated request
 const getUserId = (req) => {
-    return req.headers['x-user-id'] || 'demo-user-001';
+    return req.user?.id;
 };
 
 /**
@@ -168,7 +174,15 @@ router.post('/create-order', async (req, res) => {
             }
         };
 
-        const razorpayOrder = await razorpay.orders.create(orderOptions);
+        const razorpayInstance = getRazorpay();
+        if (!razorpayInstance) {
+            return res.status(500).json({
+                error: 'Payment gateway not configured',
+                message: 'Please add Razorpay credentials to .env file'
+            });
+        }
+
+        const razorpayOrder = await razorpayInstance.orders.create(orderOptions);
 
         // Create payment record
         const payment = await Payment.create({

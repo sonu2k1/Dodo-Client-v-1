@@ -3,11 +3,14 @@ import { motion } from 'framer-motion';
 import ChatMessage from './ChatMessage';
 import TypingIndicator from './TypingIndicator';
 import ChatInput from './ChatInput';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * ChatInterface - Main chat container with message history and input
+ * Uses authenticated fetch for AI API calls
  */
 const ChatInterface = () => {
+    const { authFetch, isAuthenticated, user } = useAuth();
     const [messages, setMessages] = useState([
         {
             id: 1,
@@ -30,6 +33,20 @@ const ChatInterface = () => {
         sessionIdRef.current = storedSessionId;
     }, []);
 
+    // Personalize welcome message when user is available
+    useEffect(() => {
+        if (user?.name && messages.length === 1) {
+            setMessages([
+                {
+                    id: 1,
+                    type: 'ai',
+                    message: `Hello ${user.name}! I'm your AI Concierge powered by Google Gemini. How can I assist you today?`,
+                    timestamp: Date.now(),
+                },
+            ]);
+        }
+    }, [user]);
+
     // Auto-scroll to bottom when new messages arrive
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -41,10 +58,23 @@ const ChatInterface = () => {
 
     // Call backend API for AI response
     const callAIAPI = async (userMessage) => {
+        if (!isAuthenticated) {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    type: 'ai',
+                    message: 'Please log in to use the AI Concierge.',
+                    timestamp: Date.now(),
+                },
+            ]);
+            return;
+        }
+
         setIsTyping(true);
 
         try {
-            const response = await fetch('http://localhost:3001/api/ai/chat', {
+            const response = await authFetch('http://localhost:3001/api/ai/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

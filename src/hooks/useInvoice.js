@@ -1,11 +1,14 @@
 import { useState, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE = 'http://localhost:3001/api';
 
 /**
  * Custom hook for invoice operations
+ * Uses authenticated fetch for all API calls
  */
 export const useInvoice = () => {
+    const { authFetch, isAuthenticated } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [currentInvoice, setCurrentInvoice] = useState(null);
@@ -16,15 +19,18 @@ export const useInvoice = () => {
      * @returns {Promise<Object>} Generated invoice
      */
     const generateInvoice = useCallback(async (invoiceData) => {
+        if (!isAuthenticated) {
+            throw new Error('Authentication required');
+        }
+
         setLoading(true);
         setError(null);
 
         try {
-            const response = await fetch(`${API_BASE}/invoices/generate`, {
+            const response = await authFetch(`${API_BASE}/invoices/generate`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-user-id': 'demo-user-001'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(invoiceData)
             });
@@ -43,7 +49,7 @@ export const useInvoice = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [authFetch, isAuthenticated]);
 
     /**
      * Get invoice by ID
@@ -51,15 +57,15 @@ export const useInvoice = () => {
      * @returns {Promise<Object>} Invoice details
      */
     const getInvoice = useCallback(async (invoiceId) => {
+        if (!isAuthenticated) {
+            throw new Error('Authentication required');
+        }
+
         setLoading(true);
         setError(null);
 
         try {
-            const response = await fetch(`${API_BASE}/invoices/${invoiceId}`, {
-                headers: {
-                    'x-user-id': 'demo-user-001'
-                }
-            });
+            const response = await authFetch(`${API_BASE}/invoices/${invoiceId}`);
 
             if (!response.ok) {
                 throw new Error('Invoice not found');
@@ -74,7 +80,7 @@ export const useInvoice = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [authFetch, isAuthenticated]);
 
     /**
      * Get all invoices
@@ -82,16 +88,16 @@ export const useInvoice = () => {
      * @returns {Promise<Object>} Invoice list
      */
     const getInvoices = useCallback(async (params = {}) => {
+        if (!isAuthenticated) {
+            throw new Error('Authentication required');
+        }
+
         setLoading(true);
         setError(null);
 
         try {
             const queryParams = new URLSearchParams(params).toString();
-            const response = await fetch(`${API_BASE}/invoices?${queryParams}`, {
-                headers: {
-                    'x-user-id': 'demo-user-001'
-                }
-            });
+            const response = await authFetch(`${API_BASE}/invoices?${queryParams}`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch invoices');
@@ -104,7 +110,7 @@ export const useInvoice = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [authFetch, isAuthenticated]);
 
     /**
      * Regenerate AI explanation for invoice
@@ -112,15 +118,16 @@ export const useInvoice = () => {
      * @returns {Promise<Object>} Updated explanation
      */
     const regenerateExplanation = useCallback(async (invoiceId) => {
+        if (!isAuthenticated) {
+            throw new Error('Authentication required');
+        }
+
         setLoading(true);
         setError(null);
 
         try {
-            const response = await fetch(`${API_BASE}/invoices/${invoiceId}/explain`, {
-                method: 'POST',
-                headers: {
-                    'x-user-id': 'demo-user-001'
-                }
+            const response = await authFetch(`${API_BASE}/invoices/${invoiceId}/explain`, {
+                method: 'POST'
             });
 
             if (!response.ok) {
@@ -144,7 +151,7 @@ export const useInvoice = () => {
         } finally {
             setLoading(false);
         }
-    }, [currentInvoice]);
+    }, [authFetch, isAuthenticated, currentInvoice]);
 
     /**
      * Generate invoice from transaction
@@ -152,15 +159,18 @@ export const useInvoice = () => {
      * @returns {Promise<Object>} Generated invoice
      */
     const generateFromTransaction = useCallback(async (transactionId) => {
+        if (!isAuthenticated) {
+            throw new Error('Authentication required');
+        }
+
         setLoading(true);
         setError(null);
 
         try {
-            const response = await fetch(`${API_BASE}/invoices/from-transaction`, {
+            const response = await authFetch(`${API_BASE}/invoices/from-transaction`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-user-id': 'demo-user-001'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ transactionId })
             });
@@ -179,7 +189,7 @@ export const useInvoice = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [authFetch, isAuthenticated]);
 
     /**
      * Clear current invoice

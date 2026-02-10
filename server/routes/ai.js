@@ -2,6 +2,12 @@ import express from 'express';
 import { generateResponse } from '../services/gemini.js';
 import { SYSTEM_PROMPT, formatPrompt } from '../utils/prompts.js';
 import Wallet from '../models/Wallet.js';
+import { executeDataQuery } from '../services/dataQueryService.js';
+import { formatQueryDataPrompt } from '../utils/queryDataPrompts.js';
+import { gatherEvidence } from '../services/askWhyService.js';
+import { formatAskWhyPrompt } from '../utils/askWhyPrompts.js';
+import { loadClientContext, buildUnifiedContext } from '../services/contextService.js';
+import { formatContextSection } from '../utils/contextPrompts.js';
 
 const router = express.Router();
 
@@ -23,8 +29,8 @@ router.post('/chat', async (req, res) => {
             });
         }
 
-        // Get user ID from header or use demo user
-        const userId = req.headers['x-user-id'] || 'demo-user-001';
+        // Get user ID from authenticated request
+        const userId = req.user?.id;
 
         // Fetch real wallet data from MongoDB
         let wallet = await Wallet.findOne({ userId });
@@ -32,8 +38,8 @@ router.post('/chat', async (req, res) => {
             // Create wallet if it doesn't exist
             wallet = await Wallet.create({
                 userId,
-                balance: 1000,
-                dodoPoints: 50
+                balance: 0,
+                dodoPoints: 100
             });
         }
 
@@ -42,6 +48,7 @@ router.post('/chat', async (req, res) => {
             sessions.set(sessionId, {
                 conversationHistory: [],
                 userId,
+                contextHints: [],
             });
         }
 
@@ -75,10 +82,16 @@ router.post('/chat', async (req, res) => {
             session.conversationHistory = session.conversationHistory.slice(-10);
         }
 
-        // Format prompt with system instructions and context
-        const fullPrompt = `${SYSTEM_PROMPT}\n\n${formatPrompt(message, {
+        // Load persistent client context from MongoDB
+        const persistentCtx = await loadClientContext(userId);
+        const unifiedContext = buildUnifiedContext(persistentCtx, session);
+        const contextSection = formatContextSection(unifiedContext);
+
+        // Format prompt with system instructions, client context, and user data
+        const fullPrompt = `${SYSTEM_PROMPT}\n\n${contextSection}${formatPrompt(message, {
             conversationHistory: session.conversationHistory.slice(0, -1), // Exclude current message
             userData: userData, // Use real wallet data
+            clientContext: unifiedContext,
         })}`;
 
         // Generate AI response
@@ -182,6 +195,43 @@ Would you like me to explain a specific invoice in more detail?`;
                             };
                             break;
 
+                        case 'ASK_WHY': {
+                            // Gather evidence from multiple data sources
+                            const whyParams = intentData.parameters || {};
+                            try {
+                                const evidence = await gatherEvidence(userId, whyParams);
+                                // Build a reasoning-chain prompt with the evidence
+                                const whyPrompt = formatAskWhyPrompt(message, evidence);
+                                // Ask Gemini to trace cause → effect
+                                finalResponse = await generateResponse(whyPrompt);
+                                responseData = { askWhy: true, subject: whyParams.subject || 'general' };
+                            } catch (whyError) {
+                                console.error('ASK_WHY error:', whyError);
+                                finalResponse = intentData.response_text || "I'm sorry, I couldn't trace the reasoning for that right now. Please try again later.";
+                                responseData = { askWhy: true, error: whyError.message };
+                            }
+                            break;
+                        }
+
+                        case 'QUERY_DATA': {
+                            // Fetch real data from MongoDB based on queryType
+                            const queryType = intentData.parameters?.queryType || 'RECENT_TRANSACTIONS';
+                            const queryParams = intentData.parameters || {};
+                            try {
+                                const queryResults = await executeDataQuery(userId, queryType, queryParams);
+                                // Build a follow-up prompt with the fetched data
+                                const dataPrompt = formatQueryDataPrompt(message, queryType, queryResults);
+                                // Ask Gemini to summarise the data in natural language
+                                finalResponse = await generateResponse(dataPrompt);
+                                responseData = { queryType, results: queryResults };
+                            } catch (queryError) {
+                                console.error('QUERY_DATA error:', queryError);
+                                finalResponse = intentData.response_text || "I'm sorry, I couldn't retrieve that data right now. Please try again later.";
+                                responseData = { queryType, error: queryError.message };
+                            }
+                            break;
+                        }
+
                         default:
                             finalResponse = intentData.response_text;
                     }
@@ -198,6 +248,14 @@ Would you like me to explain a specific invoice in more detail?`;
             content: finalResponse,
             timestamp: Date.now(),
         });
+
+        // Store short-term context hint for this session
+        const hint = `User asked about: "${message.substring(0, 80)}"`;
+        if (!session.contextHints) session.contextHints = [];
+        session.contextHints.push(hint);
+        if (session.contextHints.length > 10) {
+            session.contextHints = session.contextHints.slice(-10);
+        }
 
         // Return response
         res.json({

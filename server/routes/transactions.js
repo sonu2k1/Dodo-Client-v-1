@@ -3,9 +3,9 @@ import Transaction from '../models/Transaction.js';
 
 const router = express.Router();
 
-// Get user ID from header
+// Get user ID from authenticated request
 const getUserId = (req) => {
-    return req.headers['x-user-id'] || 'demo-user-001';
+    return req.user?.id;
 };
 
 // GET /api/transactions - Get all transactions for user
