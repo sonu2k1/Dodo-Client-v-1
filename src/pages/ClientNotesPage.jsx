@@ -202,7 +202,7 @@ const ClientNotesPage = () => {
     if (error) {
         return (
             <div className="space-y-6">
-                <h1 className="text-4xl font-bold text-gradient-neon">Client Notes</h1>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-neon">Client Notes</h1>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 text-center">
                     <AlertCircle className="mx-auto mb-4 text-red-400" size={48} />
                     <p className="text-gray-300 mb-4">{error}</p>
@@ -219,8 +219,9 @@ const ClientNotesPage = () => {
             {/* Header */}
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold text-gradient-neon flex items-center gap-3">
-                        <BookOpen size={36} className="text-neon-purple" />
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-neon flex items-center gap-2 sm:gap-3">
+                        <BookOpen size={28} className="text-neon-purple sm:hidden" />
+                        <BookOpen size={36} className="text-neon-purple hidden sm:block" />
                         Client Notes & Memory
                     </h1>
                     <p className="text-sm text-gray-500 mt-1">{counts.total} notes stored</p>

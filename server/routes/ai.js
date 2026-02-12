@@ -9,6 +9,8 @@ import { gatherEvidence } from '../services/askWhyService.js';
 import { formatAskWhyPrompt } from '../utils/askWhyPrompts.js';
 import { loadClientContext, buildUnifiedContext } from '../services/contextService.js';
 import { formatContextSection } from '../utils/contextPrompts.js';
+import { gatherSpendData, gatherROIData, gatherRiskData } from '../services/financeDataService.js';
+import { formatExplainSpendPrompt, formatAnalyzeROIPrompt, formatFlagRiskPrompt } from '../utils/financePrompts.js';
 
 const router = express.Router();
 
@@ -272,6 +274,51 @@ Would you like me to explain a specific invoice in more detail?`;
                                 console.error('CREATE_TASK error:', taskError);
                                 finalResponse = "I'm sorry, I couldn't create that task right now. Please try again.";
                                 responseData = { ...responseData, success: false, error: taskError.message };
+                            }
+                            break;
+                        }
+
+                        case 'EXPLAIN_SPEND': {
+                            const spendParams = intentData.parameters || {};
+                            try {
+                                const financeData = await gatherSpendData(userId, spendParams);
+                                const spendPrompt = formatExplainSpendPrompt(message, financeData);
+                                finalResponse = await generateResponse(spendPrompt);
+                                responseData = { ...responseData, explainSpend: true, subject: spendParams.subject || 'spend_breakdown', summary: financeData.summary };
+                            } catch (spendError) {
+                                console.error('EXPLAIN_SPEND error:', spendError);
+                                finalResponse = intentData.response_text || "I'm sorry, I couldn't analyse the spend breakdown right now. Please try again later.";
+                                responseData = { ...responseData, explainSpend: true, error: spendError.message };
+                            }
+                            break;
+                        }
+
+                        case 'ANALYZE_ROI': {
+                            const roiParams = intentData.parameters || {};
+                            try {
+                                const roiData = await gatherROIData(userId, roiParams);
+                                const roiPrompt = formatAnalyzeROIPrompt(message, roiData);
+                                finalResponse = await generateResponse(roiPrompt);
+                                responseData = { ...responseData, analyzeRoi: true, trend: roiData.trend, periodCount: roiData.periodMetrics?.length || 0 };
+                            } catch (roiError) {
+                                console.error('ANALYZE_ROI error:', roiError);
+                                finalResponse = intentData.response_text || "I'm sorry, I couldn't analyse ROI health right now. Please try again later.";
+                                responseData = { ...responseData, analyzeRoi: true, error: roiError.message };
+                            }
+                            break;
+                        }
+
+                        case 'FLAG_RISK': {
+                            const riskParams = intentData.parameters || {};
+                            try {
+                                const riskData = await gatherRiskData(userId, riskParams);
+                                const riskPrompt = formatFlagRiskPrompt(message, riskData);
+                                finalResponse = await generateResponse(riskPrompt);
+                                responseData = { ...responseData, flagRisk: true, riskLevel: riskData.riskLevel, flagCount: riskData.flagCount, flags: riskData.flags };
+                            } catch (riskError) {
+                                console.error('FLAG_RISK error:', riskError);
+                                finalResponse = intentData.response_text || "I'm sorry, I couldn't run the risk analysis right now. Please try again later.";
+                                responseData = { ...responseData, flagRisk: true, error: riskError.message };
                             }
                             break;
                         }

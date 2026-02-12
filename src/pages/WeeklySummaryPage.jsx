@@ -154,8 +154,9 @@ const WeeklySummaryPage = () => {
             {/* ─── Header ─── */}
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold text-gradient-neon flex items-center gap-3">
-                        <BarChart3 size={36} className="text-neon-cyan" />
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-neon flex items-center gap-2 sm:gap-3">
+                        <BarChart3 size={28} className="text-neon-cyan sm:hidden" />
+                        <BarChart3 size={36} className="text-neon-cyan hidden sm:block" />
                         Weekly Summary
                     </h1>
                     {generatedAt && (
@@ -177,7 +178,7 @@ const WeeklySummaryPage = () => {
             {/* ─── Overview Card ─── */}
             <motion.div
                 variants={itemVariants}
-                className="relative overflow-hidden rounded-2xl border border-[rgba(0,212,255,0.2)] bg-gradient-to-br from-[rgba(0,212,255,0.08)] to-[rgba(180,0,255,0.05)] backdrop-blur-[24px] p-8"
+                className="relative overflow-hidden rounded-2xl border border-[rgba(0,212,255,0.2)] bg-gradient-to-br from-[rgba(0,212,255,0.08)] to-[rgba(180,0,255,0.05)] backdrop-blur-[24px] p-4 sm:p-6 lg:p-8"
             >
                 <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan/5 via-transparent to-neon-purple/5 pointer-events-none" />
                 <div className="relative">

@@ -165,14 +165,14 @@ const TrustLogsPage = () => {
     return (
         <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="mb-8 flex justify-between items-start">
+            <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center gap-3">
                         <Shield className="text-neon-cyan" /> Trust & Audit Logs
                     </h1>
-                    <p className="text-gray-400">Immutable record of all account activities with proof</p>
+                    <p className="text-gray-400 text-sm sm:text-base">Immutable record of all account activities with proof</p>
                 </div>
-                <GlassButton onClick={() => setShowAskModal(true)} glowColor="cyan">
+                <GlassButton onClick={() => setShowAskModal(true)} glowColor="cyan" className="self-start">
                     <MessageCircle size={16} className="mr-2" />
                     Why Was I Charged?
                 </GlassButton>

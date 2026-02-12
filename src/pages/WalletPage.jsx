@@ -71,9 +71,9 @@ const WalletPage = () => {
 
     return (
         <div className="max-w-6xl mx-auto">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white mb-2">My Wallet</h1>
-                <p className="text-gray-400">Manage your balance and rewards</p>
+            <div className="mb-6 sm:mb-8">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">My Wallet</h1>
+                <p className="text-gray-400 text-sm sm:text-base">Manage your balance and rewards</p>
             </div>
 
             <WalletCard

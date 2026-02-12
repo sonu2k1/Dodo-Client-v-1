@@ -5,12 +5,12 @@ import { Bot, Sparkles, Zap } from 'lucide-react';
 
 const AIConcierge = () => {
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             <div>
-                <h1 className="text-4xl font-bold text-gradient-neon mb-2">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-neon mb-2">
                     AI Concierge
                 </h1>
-                <p className="text-gray-400">
+                <p className="text-gray-400 text-sm sm:text-base">
                     Your intelligent assistant powered by Google Gemini
                 </p>
             </div>
@@ -32,9 +32,9 @@ const AIConcierge = () => {
             </MotionList>
 
             <GlassCard className="overflow-hidden">
-                <div className="px-8 py-6 border-b border-[rgba(255,255,255,0.1)]">
-                    <h2 className="text-2xl font-bold text-white">Chat with AI</h2>
-                    <p className="text-sm text-gray-400 mt-1">Powered by Google Gemini</p>
+                <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-[rgba(255,255,255,0.1)]">
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Chat with AI</h2>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1">Powered by Google Gemini</p>
                 </div>
                 <ChatInterface />
             </GlassCard>

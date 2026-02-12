@@ -138,11 +138,11 @@ const ChatInterface = () => {
     };
 
     return (
-        <div className="flex flex-col h-[600px]">
+        <div className="flex flex-col h-[60vh] sm:h-[65vh] lg:h-[600px]">
             {/* Chat Messages Container */}
             <div
                 className="
-                    flex-1 overflow-y-auto px-6 py-4
+                    flex-1 overflow-y-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4
                     scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.2)]
                     scrollbar-track-transparent
                     hover:scrollbar-thumb-[rgba(255,255,255,0.3)]
@@ -168,7 +168,7 @@ const ChatInterface = () => {
             </div>
 
             {/* Chat Input */}
-            <div className="px-6 py-4 border-t border-[rgba(255,255,255,0.1)]">
+            <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-t border-[rgba(255,255,255,0.1)]">
                 <ChatInput onSend={handleSendMessage} disabled={isTyping} />
             </div>
         </div>

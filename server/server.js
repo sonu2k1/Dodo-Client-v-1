@@ -14,6 +14,11 @@ import invoiceRoutes from './routes/invoices.js';
 import taskRoutes from './routes/tasks.js';
 import weeklySummaryRoutes from './routes/weeklySummary.js';
 import clientNotesRoutes from './routes/clientNotes.js';
+import paymentHistoryRoutes from './routes/paymentHistory.js';
+import spendBreakdownRoutes from './routes/spendBreakdown.js';
+import adCampaignSpendRoutes from './routes/adCampaignSpend.js';
+import recurringCostRoutes from './routes/recurringCosts.js';
+import roiRoutes from './routes/roi.js';
 
 // Middleware imports
 import { authenticate, authorize } from './middleware/authMiddleware.js';
@@ -78,6 +83,11 @@ app.use('/api/invoices', authenticate, invoiceRoutes);
 app.use('/api/tasks', authenticate, taskRoutes);
 app.use('/api/ai/weekly-summary', authenticate, weeklySummaryRoutes);
 app.use('/api/client-notes', authenticate, clientNotesRoutes);
+app.use('/api/payment-history', authenticate, paymentHistoryRoutes);
+app.use('/api/spend-breakdown', authenticate, spendBreakdownRoutes);
+app.use('/api/ad-spend', authenticate, adCampaignSpendRoutes);
+app.use('/api/recurring-costs', authenticate, recurringCostRoutes);
+app.use('/api/roi', authenticate, roiRoutes);
 
 // Admin-level routes (admin and moderator only)
 app.use('/api/audit', authenticate, authorize('admin', 'moderator'), auditRoutes);

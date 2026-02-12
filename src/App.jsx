@@ -8,6 +8,11 @@ import WalletPage from './pages/WalletPage';
 import TransactionsPage from './pages/TransactionsPage';
 import WeeklySummaryPage from './pages/WeeklySummaryPage';
 import ClientNotesPage from './pages/ClientNotesPage';
+import PaymentHistoryPage from './pages/PaymentHistoryPage';
+import SpendMeterPage from './pages/SpendMeterPage';
+import AdSpendPage from './pages/AdSpendPage';
+import CostTrackingPage from './pages/CostTrackingPage';
+import ROIAnalysisPage from './pages/ROIAnalysisPage';
 import TrustLogsPage from './pages/TrustLogsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -35,6 +40,16 @@ const Dashboard = () => {
         return <WeeklySummaryPage />;
       case 'client-notes':
         return <ClientNotesPage />;
+      case 'payment-history':
+        return <PaymentHistoryPage />;
+      case 'spend-meter':
+        return <SpendMeterPage />;
+      case 'ad-spend':
+        return <AdSpendPage />;
+      case 'cost-tracking':
+        return <CostTrackingPage />;
+      case 'roi-analysis':
+        return <ROIAnalysisPage />;
       case 'settings':
         return (
           <div className="space-y-6">

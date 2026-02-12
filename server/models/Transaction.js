@@ -35,11 +35,58 @@ const TransactionSchema = new mongoose.Schema({
         enum: ['pending', 'completed', 'failed'],
         default: 'completed'
     },
+
+    // ── Enhanced fields ─────────────────────────────────
+    eventType: {
+        type: String,
+        enum: ['payment', 'refund', 'manual_adjustment', 'points_transfer'],
+        default: 'payment'
+    },
+    source: {
+        type: String,
+        enum: ['stripe', 'razorpay', 'admin', 'system', 'ai_concierge'],
+        default: 'system'
+    },
+    auditRefId: {
+        type: String,
+        default: null
+    },
+
+    // ── Audit trail ─────────────────────────────────────
+    auditTrail: [{
+        action: {
+            type: String,
+            enum: ['created', 'processing', 'completed', 'failed', 'reversed', 'flagged', 'note_added'],
+            required: true
+        },
+        status: {
+            type: String,
+            default: ''
+        },
+        actor: {
+            type: String,
+            enum: ['system', 'admin', 'gateway', 'user'],
+            default: 'system'
+        },
+        note: {
+            type: String,
+            default: ''
+        },
+        timestamp: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+
     metadata: {
         type: Map,
         of: String
     },
     createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
         type: Date,
         default: Date.now
     }

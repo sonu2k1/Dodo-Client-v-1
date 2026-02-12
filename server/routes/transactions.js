@@ -12,11 +12,13 @@ const getUserId = (req) => {
 router.get('/', async (req, res) => {
     try {
         const userId = getUserId(req);
-        const { limit = 50, offset = 0, type, category } = req.query;
+        const { limit = 50, offset = 0, type, category, eventType, source } = req.query;
 
         const query = { userId };
         if (type) query.type = type;
         if (category) query.category = category;
+        if (eventType) query.eventType = eventType;
+        if (source) query.source = source;
 
         const transactions = await Transaction.find(query)
             .sort({ createdAt: -1 })
@@ -61,7 +63,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const userId = getUserId(req);
-        const { amount, type, reason, category } = req.body;
+        const { amount, type, reason, category, eventType, source, auditRefId } = req.body;
 
         if (!amount || !type || !reason) {
             return res.status(400).json({ error: 'Amount, type, and reason are required' });
@@ -76,7 +78,17 @@ router.post('/', async (req, res) => {
             amount: Math.abs(amount),
             type,
             reason,
-            category: category || 'other'
+            category: category || 'other',
+            eventType: eventType || 'payment',
+            source: source || 'system',
+            auditRefId: auditRefId || null,
+            auditTrail: [{
+                action: 'created',
+                status: 'Transaction initiated',
+                actor: 'system',
+                note: `Created via ${source || 'system'}`,
+                timestamp: new Date()
+            }]
         });
 
         res.status(201).json(transaction);
@@ -125,6 +137,59 @@ router.get('/stats/summary', async (req, res) => {
     } catch (error) {
         console.error('Error fetching stats:', error);
         res.status(500).json({ error: 'Failed to fetch stats' });
+    }
+});
+
+// POST /api/transactions/:id/audit - Append an audit trail entry
+router.post('/:id/audit', async (req, res) => {
+    try {
+        const userId = getUserId(req);
+        const { action, status, actor, note } = req.body;
+
+        if (!action) {
+            return res.status(400).json({ error: 'Action is required' });
+        }
+
+        const validActions = ['created', 'processing', 'completed', 'failed', 'reversed', 'flagged', 'note_added'];
+        if (!validActions.includes(action)) {
+            return res.status(400).json({ error: `Action must be one of: ${validActions.join(', ')}` });
+        }
+
+        const transaction = await Transaction.findOne({
+            transactionId: req.params.id,
+            userId
+        });
+
+        if (!transaction) {
+            return res.status(404).json({ error: 'Transaction not found' });
+        }
+
+        const entry = {
+            action,
+            status: status || '',
+            actor: actor || 'system',
+            note: note || '',
+            timestamp: new Date()
+        };
+
+        transaction.auditTrail.push(entry);
+        transaction.updatedAt = new Date();
+
+        // If the audit action reflects a status change, update top-level status
+        if (['completed', 'failed'].includes(action)) {
+            transaction.status = action;
+        }
+
+        await transaction.save();
+
+        res.json({
+            success: true,
+            auditTrail: transaction.auditTrail,
+            message: 'Audit entry added'
+        });
+    } catch (error) {
+        console.error('Error adding audit entry:', error);
+        res.status(500).json({ error: 'Failed to add audit entry' });
     }
 });
 

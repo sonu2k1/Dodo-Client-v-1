@@ -1,11 +1,22 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * GlassTable - Glassmorphism styled table component
+ *
+ * Optional expandable rows:
+ *   expandedRowIndex – index of the currently expanded row (null = none)
+ *   renderExpandedRow(row) – renders the expanded content
  */
-const GlassTable = ({ columns, data, loading = false, emptyMessage = 'No data available' }) => {
+const GlassTable = ({
+    columns,
+    data,
+    loading = false,
+    emptyMessage = 'No data available',
+    expandedRowIndex = null,
+    renderExpandedRow = null
+}) => {
     if (loading) {
         return (
             <div className="backdrop-blur-[20px] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.12)] rounded-2xl p-8">
@@ -47,21 +58,47 @@ const GlassTable = ({ columns, data, loading = false, emptyMessage = 'No data av
                             </tr>
                         ) : (
                             data.map((row, rowIndex) => (
-                                <motion.tr
-                                    key={rowIndex}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: rowIndex * 0.05 }}
-                                    className="border-b border-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.05)] transition-colors duration-200"
-                                >
-                                    {columns.map((col, colIndex) => (
-                                        <td key={colIndex} className="px-6 py-4 whitespace-nowrap">
-                                            {col.render ? col.render(row[col.accessor], row) : (
-                                                <span className="text-white">{row[col.accessor]}</span>
-                                            )}
-                                        </td>
-                                    ))}
-                                </motion.tr>
+                                <React.Fragment key={rowIndex}>
+                                    <motion.tr
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: rowIndex * 0.05 }}
+                                        className={`border-b border-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.05)] transition-colors duration-200 ${expandedRowIndex === rowIndex ? 'bg-[rgba(255,255,255,0.04)]' : ''
+                                            }`}
+                                    >
+                                        {columns.map((col, colIndex) => (
+                                            <td key={colIndex} className="px-6 py-4 whitespace-nowrap">
+                                                {col.render ? col.render(row[col.accessor], row, rowIndex) : (
+                                                    <span className="text-white">{row[col.accessor]}</span>
+                                                )}
+                                            </td>
+                                        ))}
+                                    </motion.tr>
+
+                                    {/* Expandable detail row */}
+                                    <AnimatePresence>
+                                        {expandedRowIndex === rowIndex && renderExpandedRow && (
+                                            <motion.tr
+                                                key={`expanded-${rowIndex}`}
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                transition={{ duration: 0.3 }}
+                                            >
+                                                <td colSpan={columns.length} className="px-0 py-0">
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: -10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -10 }}
+                                                        transition={{ duration: 0.25, delay: 0.05 }}
+                                                    >
+                                                        {renderExpandedRow(row)}
+                                                    </motion.div>
+                                                </td>
+                                            </motion.tr>
+                                        )}
+                                    </AnimatePresence>
+                                </React.Fragment>
                             ))
                         )}
                     </tbody>
@@ -79,7 +116,9 @@ GlassTable.propTypes = {
     })).isRequired,
     data: PropTypes.array.isRequired,
     loading: PropTypes.bool,
-    emptyMessage: PropTypes.string
+    emptyMessage: PropTypes.string,
+    expandedRowIndex: PropTypes.number,
+    renderExpandedRow: PropTypes.func
 };
 
 export default GlassTable;

@@ -6,11 +6,16 @@ import {
     Wallet,
     Shield,
     Receipt,
+    CreditCard,
     BarChart3,
     BookOpen,
+    PieChart,
+    Megaphone,
     Settings,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Repeat,
+    TrendingUp
 } from 'lucide-react';
 
 /**
@@ -21,20 +26,27 @@ import {
  * @param {Function} props.onNavigate - Navigation handler
  * @param {boolean} props.isCollapsed - Sidebar collapsed state
  * @param {Function} props.onToggleCollapse - Toggle collapse handler
+ * @param {Object} props.anomalyBadges - Object mapping item IDs to anomaly counts for displaying warning badges
  */
 const Sidebar = ({
     activeItem,
     onNavigate,
     isCollapsed = false,
-    onToggleCollapse
+    onToggleCollapse,
+    anomalyBadges = {}
 }) => {
     const navigationItems = [
         { id: 'ai-concierge', label: 'AI Concierge', icon: Bot, color: 'cyan' },
         { id: 'wallet', label: 'Wallet', icon: Wallet, color: 'blue' },
         { id: 'trust-logs', label: 'Trust Logs', icon: Shield, color: 'purple' },
         { id: 'transactions', label: 'Transactions', icon: Receipt, color: 'pink' },
+        { id: 'payment-history', label: 'Payment History', icon: CreditCard, color: 'cyan' },
         { id: 'weekly-summary', label: 'Weekly Summary', icon: BarChart3, color: 'blue' },
         { id: 'client-notes', label: 'Client Notes', icon: BookOpen, color: 'purple' },
+        { id: 'spend-meter', label: 'Spend Meter', icon: PieChart, color: 'green' },
+        { id: 'ad-spend', label: 'Ad Spend', icon: Megaphone, color: 'cyan' },
+        { id: 'cost-tracking', label: 'Cost Tracking', icon: Repeat, color: 'purple' },
+        { id: 'roi-analysis', label: 'ROI Analysis', icon: TrendingUp, color: 'green' },
         { id: 'settings', label: 'Settings', icon: Settings, color: 'green' },
     ];
 
@@ -133,6 +145,23 @@ const Sidebar = ({
                                         </motion.span>
                                     )}
                                 </AnimatePresence>
+                                {/* Anomaly warning badge */}
+                                {anomalyBadges[item.id] && (
+                                    <motion.span
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className={`
+                                            ${isCollapsed ? 'absolute -top-1 -right-1' : 'ml-auto'}
+                                            w-5 h-5 rounded-full
+                                            bg-amber-500 text-white
+                                            flex items-center justify-center
+                                            text-[9px] font-bold
+                                            shadow-[0_0_8px_rgba(255,180,0,0.5)]
+                                        `}
+                                    >
+                                        {anomalyBadges[item.id]}
+                                    </motion.span>
+                                )}
                             </motion.button>
                         );
                     })}
