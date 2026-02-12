@@ -1,0 +1,15 @@
+{
+  "test1": {
+    "status": 200,
+    "message": "{\n  \"type\": \"intent\",\n  \"intent\": \"GENERAL_RESPONSE\",\n  \"urgencyScore\": 4,\n  \"intentType\": \"ACTION_REQUEST\",\n",
+    "data": {}
+  },
+  "test2": {
+    "status": 200,
+    "message": "Based on your preferences, I prioritize providing detailed explanations with examples while respecting your strict $5,000 monthly budget cap. I also recall your decision to utilize the Standard Plan at $3,000 per month following your review of the Premium tier in February. Your profile currently reflects a high trust score of 95/100.",
+    "data": {
+      "urgencyScore": 2,
+      "intentType": "GENERAL"
+    }
+  }
+}

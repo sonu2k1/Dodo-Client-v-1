@@ -91,15 +91,20 @@ const ChatInterface = () => {
 
             const data = await response.json();
 
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: Date.now(),
-                    type: 'ai',
-                    message: data.message,
-                    timestamp: data.timestamp,
-                },
-            ]);
+            // Build AI message object
+            const aiMessage = {
+                id: Date.now(),
+                type: 'ai',
+                message: data.message,
+                timestamp: data.timestamp,
+            };
+
+            // Attach task data if a task was created
+            if (data.data?.action === 'task_created' && data.data?.task) {
+                aiMessage.taskData = data.data.task;
+            }
+
+            setMessages((prev) => [...prev, aiMessage]);
         } catch (error) {
             console.error('AI API Error:', error);
             // Fallback error message
@@ -153,6 +158,7 @@ const ChatInterface = () => {
                         message={msg.message}
                         type={msg.type}
                         timestamp={msg.timestamp}
+                        taskData={msg.taskData}
                     />
                 ))}
 

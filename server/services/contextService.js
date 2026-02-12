@@ -1,4 +1,5 @@
 import ClientContext from '../models/ClientContext.js';
+import ClientNote from '../models/ClientNote.js';
 
 /**
  * Context Service
@@ -16,7 +17,14 @@ export async function loadClientContext(userId) {
     if (!ctx) {
         ctx = await ClientContext.create({ userId });
     }
-    return ctx;
+
+    // Load user-managed notes that are visible to AI
+    const clientNotes = await ClientNote.find({ userId, aiVisible: true })
+        .sort({ pinned: -1, updatedAt: -1 })
+        .limit(20)
+        .lean();
+
+    return { ctx, clientNotes };
 }
 
 /**
@@ -27,7 +35,13 @@ export async function loadClientContext(userId) {
  * @param {object} sessionCtx - In-memory session data (conversation hints)
  * @returns {object} merged context for prompt formatting
  */
-export function buildUnifiedContext(persistentCtx, sessionCtx = {}) {
+export function buildUnifiedContext(persistentCtx, sessionCtx = {}, clientNotes = []) {
+    // Group client notes by type
+    const notesByType = { preference: [], constraint: [], decision: [], pattern: [] };
+    clientNotes.forEach(n => {
+        if (notesByType[n.type]) notesByType[n.type].push(n);
+    });
+
     return {
         // Client preferences
         preferences: {
@@ -67,6 +81,9 @@ export function buildUnifiedContext(persistentCtx, sessionCtx = {}) {
                 notes: t.notes,
                 date: t.date
             })),
+
+        // Client memory notes (user-managed, grouped)
+        clientMemory: notesByType,
 
         // Short-term session hints (accumulated during conversation)
         sessionHints: sessionCtx.contextHints || []

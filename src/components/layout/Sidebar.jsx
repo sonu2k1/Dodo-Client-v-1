@@ -6,6 +6,8 @@ import {
     Wallet,
     Shield,
     Receipt,
+    BarChart3,
+    BookOpen,
     Settings,
     ChevronLeft,
     ChevronRight
@@ -31,6 +33,8 @@ const Sidebar = ({
         { id: 'wallet', label: 'Wallet', icon: Wallet, color: 'blue' },
         { id: 'trust-logs', label: 'Trust Logs', icon: Shield, color: 'purple' },
         { id: 'transactions', label: 'Transactions', icon: Receipt, color: 'pink' },
+        { id: 'weekly-summary', label: 'Weekly Summary', icon: BarChart3, color: 'blue' },
+        { id: 'client-notes', label: 'Client Notes', icon: BookOpen, color: 'purple' },
         { id: 'settings', label: 'Settings', icon: Settings, color: 'green' },
     ];
 
@@ -79,7 +83,7 @@ const Sidebar = ({
                                     transition={{ duration: 0.2 }}
                                 >
                                     <h1 className="text-xl font-bold text-gradient-neon">
-                                        Dodo 
+                                        Dodo
                                     </h1>
                                     <p className="text-xs text-gray-400">Client Concierge</p>
                                 </motion.div>

@@ -11,6 +11,9 @@ import transactionRoutes from './routes/transactions.js';
 import auditRoutes from './routes/audit.js';
 import paymentRoutes from './routes/payments.js';
 import invoiceRoutes from './routes/invoices.js';
+import taskRoutes from './routes/tasks.js';
+import weeklySummaryRoutes from './routes/weeklySummary.js';
+import clientNotesRoutes from './routes/clientNotes.js';
 
 // Middleware imports
 import { authenticate, authorize } from './middleware/authMiddleware.js';
@@ -72,6 +75,9 @@ app.use('/api/wallet', authenticate, walletRoutes);
 app.use('/api/transactions', authenticate, transactionRoutes);
 app.use('/api/payments', authenticate, paymentRoutes);
 app.use('/api/invoices', authenticate, invoiceRoutes);
+app.use('/api/tasks', authenticate, taskRoutes);
+app.use('/api/ai/weekly-summary', authenticate, weeklySummaryRoutes);
+app.use('/api/client-notes', authenticate, clientNotesRoutes);
 
 // Admin-level routes (admin and moderator only)
 app.use('/api/audit', authenticate, authorize('admin', 'moderator'), auditRoutes);

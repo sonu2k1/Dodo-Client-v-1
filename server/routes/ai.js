@@ -2,6 +2,7 @@ import express from 'express';
 import { generateResponse } from '../services/gemini.js';
 import { SYSTEM_PROMPT, formatPrompt } from '../utils/prompts.js';
 import Wallet from '../models/Wallet.js';
+import { convertToKanbanTask } from '../services/taskService.js';
 import { executeDataQuery } from '../services/dataQueryService.js';
 import { formatQueryDataPrompt } from '../utils/queryDataPrompts.js';
 import { gatherEvidence } from '../services/askWhyService.js';
@@ -83,8 +84,8 @@ router.post('/chat', async (req, res) => {
         }
 
         // Load persistent client context from MongoDB
-        const persistentCtx = await loadClientContext(userId);
-        const unifiedContext = buildUnifiedContext(persistentCtx, session);
+        const { ctx: persistentCtx, clientNotes } = await loadClientContext(userId);
+        const unifiedContext = buildUnifiedContext(persistentCtx, session, clientNotes);
         const contextSection = formatContextSection(unifiedContext);
 
         // Format prompt with system instructions, client context, and user data
@@ -111,11 +112,27 @@ router.post('/chat', async (req, res) => {
                 if (intentData.type === 'intent') {
                     console.log(`🤖 Detected Intent: ${intentData.intent}`);
 
+                    // Extract analysis data
+                    const urgency = intentData.urgencyScore || 1;
+                    const intentType = intentData.intentType || 'GENERAL';
+
+                    // Log high urgency interactions
+                    if (urgency >= 7 || intentType === 'URGENT_ISSUE') {
+                        console.warn(`🚨 URGENT INTERACTION (${urgency}/10): ${intentType} - User: ${userId}`);
+                    }
+
+                    // Add analysis to response data
+                    responseData = {
+                        ...responseData,
+                        urgencyScore: urgency,
+                        intentType: intentType
+                    };
+
                     // Handle Intents with real wallet data
                     switch (intentData.intent) {
                         case 'CHECK_BALANCE':
                             finalResponse = intentData.response_text || `Your current balance is $${userData.balance.toFixed(2)} and you have ${userData.points} DoDo Points.`;
-                            responseData = { balance: userData.balance, points: userData.points };
+                            responseData = { ...responseData, balance: userData.balance, points: userData.points };
                             break;
 
                         case 'REDEEM_POINTS':
@@ -135,6 +152,7 @@ router.post('/chat', async (req, res) => {
                                 finalResponse = `I'm sorry, you only have ${session.wallet.dodoPoints} points, which isn't enough to redeem ${pointsToRedeem}.`;
                             }
                             responseData = {
+                                ...responseData,
                                 success: true,
                                 new_points: session.wallet.dodoPoints,
                                 new_balance: session.wallet.balance
@@ -152,13 +170,14 @@ router.post('/chat', async (req, res) => {
                             } else {
                                 finalResponse = "You don't have any transactions yet.";
                             }
-                            responseData = { transactions: userData.transactions };
+                            responseData = { ...responseData, transactions: userData.transactions };
                             break;
 
                         case 'EXPLAIN_CHARGE':
                             // In a real app, retrieve specific transaction details to enhance the explanation
                             finalResponse = intentData.response_text;
                             responseData = {
+                                ...responseData,
                                 success: true,
                                 action: 'lookup_transaction',
                                 details: 'Transaction details retrieved'
@@ -169,6 +188,7 @@ router.post('/chat', async (req, res) => {
                             // Signal frontend to show invoice generation UI
                             finalResponse = intentData.response_text || `I can help you generate an invoice! Please go to the Transactions page and click the invoice icon next to any transaction, or tell me which transaction you'd like an invoice for.`;
                             responseData = {
+                                ...responseData,
                                 success: true,
                                 action: 'show_invoice_ui',
                                 transactionId: intentData.parameters?.transactionId || null
@@ -189,6 +209,7 @@ router.post('/chat', async (req, res) => {
 
 Would you like me to explain a specific invoice in more detail?`;
                             responseData = {
+                                ...responseData,
                                 success: true,
                                 action: 'explain_invoice',
                                 invoiceId: intentData.parameters?.invoiceId || null
@@ -204,11 +225,11 @@ Would you like me to explain a specific invoice in more detail?`;
                                 const whyPrompt = formatAskWhyPrompt(message, evidence);
                                 // Ask Gemini to trace cause → effect
                                 finalResponse = await generateResponse(whyPrompt);
-                                responseData = { askWhy: true, subject: whyParams.subject || 'general' };
+                                responseData = { ...responseData, askWhy: true, subject: whyParams.subject || 'general' };
                             } catch (whyError) {
                                 console.error('ASK_WHY error:', whyError);
                                 finalResponse = intentData.response_text || "I'm sorry, I couldn't trace the reasoning for that right now. Please try again later.";
-                                responseData = { askWhy: true, error: whyError.message };
+                                responseData = { ...responseData, askWhy: true, error: whyError.message };
                             }
                             break;
                         }
@@ -223,14 +244,41 @@ Would you like me to explain a specific invoice in more detail?`;
                                 const dataPrompt = formatQueryDataPrompt(message, queryType, queryResults);
                                 // Ask Gemini to summarise the data in natural language
                                 finalResponse = await generateResponse(dataPrompt);
-                                responseData = { queryType, results: queryResults };
+                                responseData = { ...responseData, queryType, results: queryResults };
                             } catch (queryError) {
                                 console.error('QUERY_DATA error:', queryError);
                                 finalResponse = intentData.response_text || "I'm sorry, I couldn't retrieve that data right now. Please try again later.";
-                                responseData = { queryType, error: queryError.message };
+                                responseData = { ...responseData, queryType, error: queryError.message };
                             }
                             break;
                         }
+
+                        case 'CREATE_TASK': {
+                            const taskParams = intentData.parameters || {};
+                            try {
+                                const userName = req.user?.name || '';
+                                const kanbanTask = await convertToKanbanTask(userId, taskParams, message, userName);
+                                const dueDateStr = kanbanTask.dueDate
+                                    ? new Date(kanbanTask.dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                                    : 'No due date';
+                                finalResponse = intentData.response_text || `I've created a task: "${kanbanTask.title}"\n\n📌 **Priority:** ${kanbanTask.priority} (score: ${kanbanTask.priorityScore}/100)\n👤 **Owner:** ${kanbanTask.owner}\n📅 **Due:** ${dueDateStr}\n📋 **Column:** ${kanbanTask.column}`;
+                                responseData = {
+                                    ...responseData,
+                                    success: true,
+                                    action: 'task_created',
+                                    task: kanbanTask,
+                                };
+                            } catch (taskError) {
+                                console.error('CREATE_TASK error:', taskError);
+                                finalResponse = "I'm sorry, I couldn't create that task right now. Please try again.";
+                                responseData = { ...responseData, success: false, error: taskError.message };
+                            }
+                            break;
+                        }
+
+                        case 'GENERAL_RESPONSE':
+                            finalResponse = intentData.response_text;
+                            break;
 
                         default:
                             finalResponse = intentData.response_text;
@@ -267,6 +315,45 @@ Would you like me to explain a specific invoice in more detail?`;
 
     } catch (error) {
         console.error('Chat endpoint error:', error);
+        console.error('Error message:', error.message);
+        console.error('Error status:', error.status);
+
+        // Graceful degradation for ANY AI error (Quota, Network, Model Not Found)
+        // Check if user is trying to create a task
+        const lowerMsg = (req.body.message || '').toLowerCase();
+        if (lowerMsg.includes('task') || lowerMsg.includes('todo') || lowerMsg.includes('remind')) {
+            try {
+                const userName = req.user?.name || '';
+                console.log(`Fallback: Creating task for ${userName} with message: "${req.body.message}"`);
+
+                // Create task using raw message as title
+                const kanbanTask = await convertToKanbanTask(req.user.id, { title: req.body.message }, req.body.message, userName);
+
+                return res.json({
+                    message: `I'm having trouble connecting to my brain right now, but I've created a task for you based on your message.\n\nCreated: "${kanbanTask.title}"`,
+                    data: {
+                        success: true,
+                        action: 'task_created',
+                        task: kanbanTask,
+                        fallback: true
+                    },
+                    sessionId: req.body.sessionId,
+                    timestamp: Date.now(),
+                });
+            } catch (fallbackError) {
+                console.error('Fallback task creation failed:', fallbackError);
+            }
+        }
+
+        // If not a task or fallback failed, check for 429 specifically for other queries
+        if (error.message.includes('429') || error.message.includes('Too Many Requests') || error.message.includes('Quota exceeded') || error.status === 429) {
+            return res.status(429).json({
+                error: 'AI Busy',
+                message: 'I am currently experiencing high traffic. Please try again in a minute.',
+                data: { urgencyScore: 1, intentType: 'GENERAL' }
+            });
+        }
+
         res.status(500).json({
             error: 'Failed to process chat message',
             message: error.message,

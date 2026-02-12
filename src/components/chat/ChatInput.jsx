@@ -1,19 +1,75 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { Send } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Send, Mic, Square } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * ChatInput - Input field with send button for chat interface
  */
 const ChatInput = ({ onSend, disabled = false, placeholder = 'Type your message...' }) => {
     const [message, setMessage] = useState('');
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef(null);
+
+    useEffect(() => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = true;
+            recognitionRef.current.interimResults = true;
+
+            recognitionRef.current.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                if (finalTranscript) {
+                    setMessage((prev) => prev + (prev ? ' ' : '') + finalTranscript);
+                }
+            };
+
+            recognitionRef.current.onerror = (event) => {
+                console.error('Speech recognition error', event.error);
+                setIsListening(false);
+            };
+
+            recognitionRef.current.onend = () => {
+                setIsListening(false);
+            };
+        }
+
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+        };
+    }, []);
+
+    const toggleListening = () => {
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            recognitionRef.current.start();
+            setIsListening(true);
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (message.trim() && !disabled) {
             onSend(message.trim());
             setMessage('');
+            if (isListening) {
+                recognitionRef.current.stop();
+                setIsListening(false);
+            }
         }
     };
 
@@ -40,13 +96,58 @@ const ChatInput = ({ onSend, disabled = false, placeholder = 'Type your message.
                     focus-within:shadow-[0_0_20px_rgba(0,212,255,0.2)]
                 "
             >
+                {/* Voice Input Button */}
+                {recognitionRef.current && (
+                    <motion.button
+                        type="button"
+                        onClick={toggleListening}
+                        className={`
+                            flex-shrink-0
+                            w-9 h-9
+                            rounded-lg
+                            backdrop-blur-[20px]
+                            border border-[rgba(255,255,255,0.18)]
+                            flex items-center justify-center
+                            transition-all duration-300
+                            ${isListening
+                                ? 'bg-red-500/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse'
+                                : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
+                            }
+                        `}
+                        whileTap={{ scale: 0.9 }}
+                        whileHover={{ scale: 1.05 }}
+                    >
+                        <AnimatePresence mode='wait'>
+                            {isListening ? (
+                                <motion.div
+                                    key="stop"
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    exit={{ scale: 0 }}
+                                >
+                                    <Square className="w-4 h-4 text-red-500 fill-current" />
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="mic"
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    exit={{ scale: 0 }}
+                                >
+                                    <Mic className="w-4 h-4 text-gray-400" />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.button>
+                )}
+
                 <input
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     disabled={disabled}
-                    placeholder={placeholder}
+                    placeholder={isListening ? "Listening..." : placeholder}
                     className="
                         flex-1
                         bg-transparent

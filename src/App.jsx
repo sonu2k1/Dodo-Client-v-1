@@ -6,6 +6,8 @@ import { AppLayout } from './components/layout';
 import AIConcierge from './pages/AIConcierge';
 import WalletPage from './pages/WalletPage';
 import TransactionsPage from './pages/TransactionsPage';
+import WeeklySummaryPage from './pages/WeeklySummaryPage';
+import ClientNotesPage from './pages/ClientNotesPage';
 import TrustLogsPage from './pages/TrustLogsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -29,6 +31,10 @@ const Dashboard = () => {
         return <TrustLogsPage />;
       case 'transactions':
         return <TransactionsPage />;
+      case 'weekly-summary':
+        return <WeeklySummaryPage />;
+      case 'client-notes':
+        return <ClientNotesPage />;
       case 'settings':
         return (
           <div className="space-y-6">

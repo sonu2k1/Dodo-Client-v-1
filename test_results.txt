@@ -1,0 +1,14 @@
+=== TEST 1: Premium upgrade (should flag conflict) ===
+STATUS: 200
+RESPONSE:
+{
+  "type": "intent",
+  "intent": "GENERAL_RESPONSE",
+  "urgencyScore": 3,
+  "intentType": "GENERAL",
+  
+
+=== TEST 2: What do you know about me? ===
+STATUS: 200
+RESPONSE:
+ check the JSON Rules again: "If no specific functional intent matches but you detect urgency/feedback, use 'GENERAL_RESPONSE' as the intent." This isn't really urgency or feedback. It

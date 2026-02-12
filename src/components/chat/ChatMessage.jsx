@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { Bot, User } from 'lucide-react';
+import TaskCard from './TaskCard';
 
 /**
  * ChatMessage - Message bubble component for chat interface
  * Supports user and AI message types with different styling
  */
-const ChatMessage = ({ message, type = 'ai', timestamp }) => {
+const ChatMessage = ({ message, type = 'ai', timestamp, taskData }) => {
     const isUser = type === 'user';
 
     const messageVariants = {
@@ -72,6 +73,9 @@ const ChatMessage = ({ message, type = 'ai', timestamp }) => {
                     </p>
                 </div>
 
+                {/* Task Card (rendered when AI creates a task) */}
+                {taskData && <TaskCard task={taskData} />}
+
                 {/* Timestamp */}
                 {timestamp && (
                     <span className="text-xs text-gray-500 mt-1 px-2">
@@ -90,6 +94,12 @@ ChatMessage.propTypes = {
     message: PropTypes.string.isRequired,
     type: PropTypes.oneOf(['user', 'ai']).isRequired,
     timestamp: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    taskData: PropTypes.shape({
+        title: PropTypes.string,
+        description: PropTypes.string,
+        status: PropTypes.string,
+        priority: PropTypes.string,
+    }),
 };
 
 export default ChatMessage;
