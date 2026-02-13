@@ -18,7 +18,7 @@ const WalletPage = () => {
         if (!isAuthenticated) return;
 
         try {
-            const response = await authFetch('http://localhost:3001/api/wallet');
+            const response = await authFetch('/api/wallet');
             if (response.ok) {
                 const data = await response.json();
                 setWalletData(data);
@@ -49,7 +49,7 @@ const WalletPage = () => {
         if (!isAuthenticated) return;
 
         try {
-            await authFetch('http://localhost:3001/api/wallet/redeem', {
+            await authFetch('/api/wallet/redeem', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

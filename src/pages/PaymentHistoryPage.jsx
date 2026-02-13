@@ -24,7 +24,7 @@ import GlassTable from '../components/ui/GlassTable';
 import GlassButton from '../components/ui/GlassButton';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 const STATUS_CONFIG = {
     completed: { label: 'Success', icon: CheckCircle2, color: 'text-neon-green', bg: 'bg-neon-green/15', border: 'border-neon-green/30' },

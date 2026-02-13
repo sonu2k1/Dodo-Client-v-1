@@ -74,7 +74,7 @@ const ChatInterface = () => {
         setIsTyping(true);
 
         try {
-            const response = await authFetch('http://localhost:3001/api/ai/chat', {
+            const response = await authFetch('/api/ai/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

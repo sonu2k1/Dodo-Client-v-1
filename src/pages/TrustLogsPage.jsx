@@ -23,7 +23,7 @@ const TrustLogsPage = () => {
         setLoading(true);
         try {
             const categoryParam = filter !== 'all' ? `?category=${filter}` : '';
-            const response = await authFetch(`http://localhost:3001/api/audit${categoryParam}`);
+            const response = await authFetch(`/api/audit${categoryParam}`);
             if (response.ok) {
                 const data = await response.json();
                 setLogs(data.logs || []);
@@ -39,7 +39,7 @@ const TrustLogsPage = () => {
         if (!isAuthenticated) return;
 
         try {
-            const response = await authFetch('http://localhost:3001/api/audit/summary/stats');
+            const response = await authFetch('/api/audit/summary/stats');
             if (response.ok) {
                 const data = await response.json();
                 setStats(data);
@@ -58,7 +58,7 @@ const TrustLogsPage = () => {
         if (!question.trim() || !isAuthenticated) return;
         setExplaining(true);
         try {
-            const response = await authFetch('http://localhost:3001/api/audit/explain', {
+            const response = await authFetch('/api/audit/explain', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

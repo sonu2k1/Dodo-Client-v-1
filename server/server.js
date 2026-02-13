@@ -46,7 +46,7 @@ app.use(xssSanitization); // XSS prevention
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:5173', // Vite dev server
+    origin: process.env.CLIENT_URL || 'http://localhost:5173', // Allow env var or fallback to Vite dev server
     credentials: true,
 }));
 app.use(express.json({ limit: '10kb' })); // Limit body size
@@ -93,14 +93,25 @@ app.use('/api/roi', authenticate, roiRoutes);
 app.use('/api/audit', authenticate, authorize('admin', 'moderator'), auditRoutes);
 
 // ============================================
-// MongoDB Connection
+// MongoDB Connection (cached for serverless)
 // ============================================
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ MongoDB Connected'))
-    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+let isConnected = false;
+
+const connectDB = async () => {
+    if (isConnected) return;
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+        isConnected = true;
+        console.log('✅ MongoDB Connected');
+    } catch (err) {
+        console.error('❌ MongoDB Connection Error:', err);
+    }
+};
+
+connectDB();
 
 // Health check endpoint (public)
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
@@ -109,24 +120,28 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Error handling middleware
-// Error handling middleware
-app.use(errorHandler);
-
-// 404 handler
+// 404 handler (must be before error handler)
 app.all('*', (req, res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`\n🚀 DoDo Backend Server running on http://localhost:${PORT}`);
-    console.log(`📡 API endpoints available at http://localhost:${PORT}/api`);
-    console.log(`🤖 Gemini API configured: ${!!process.env.GEMINI_API_KEY ? '✅' : '❌'}`);
-    console.log(`🔐 JWT configured: ${!!process.env.JWT_SECRET ? '✅' : '❌'}\n`);
+// Error handling middleware
+app.use(errorHandler);
 
-    if (!process.env.JWT_SECRET) {
-        console.warn('⚠️  WARNING: JWT_SECRET not set in .env file');
-        console.warn('   Authentication will not work without it!\n');
-    }
-});
+// Start server
+// Start server only if not in Vercel environment
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`\n🚀 DoDo Backend Server running on http://localhost:${PORT}`);
+        console.log(`📡 API endpoints available at http://localhost:${PORT}/api`);
+        console.log(`🤖 Gemini API configured: ${!!process.env.GEMINI_API_KEY ? '✅' : '❌'}`);
+        console.log(`🔐 JWT configured: ${!!process.env.JWT_SECRET ? '✅' : '❌'}\n`);
+
+        if (!process.env.JWT_SECRET) {
+            console.warn('⚠️  WARNING: JWT_SECRET not set in .env file');
+            console.warn('   Authentication will not work without it!\n');
+        }
+    });
+}
+
+export default app;

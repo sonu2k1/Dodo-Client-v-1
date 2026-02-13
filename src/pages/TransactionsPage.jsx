@@ -85,7 +85,7 @@ const TransactionsPage = () => {
             if (sourceFilter) params.set('source', sourceFilter);
 
             const qs = params.toString();
-            const response = await authFetch(`http://localhost:3001/api/transactions${qs ? `?${qs}` : ''}`);
+            const response = await authFetch(`/api/transactions${qs ? `?${qs}` : ''}`);
             if (response.ok) {
                 const data = await response.json();
                 setTransactions(data.transactions || []);
@@ -100,7 +100,7 @@ const TransactionsPage = () => {
     const fetchStats = useCallback(async () => {
         if (!isAuthenticated) return;
         try {
-            const response = await authFetch('http://localhost:3001/api/transactions/stats/summary');
+            const response = await authFetch('/api/transactions/stats/summary');
             if (response.ok) setStats(await response.json());
         } catch (error) {
             console.error('Failed to fetch stats:', error);
@@ -276,8 +276,8 @@ const TransactionsPage = () => {
                             <div className="flex items-center justify-between">
                                 <span className="text-xs text-gray-500">Status</span>
                                 <span className={`text-sm font-medium capitalize ${row.status === 'completed' ? 'text-neon-green'
-                                        : row.status === 'failed' ? 'text-red-400'
-                                            : 'text-gray-400'
+                                    : row.status === 'failed' ? 'text-red-400'
+                                        : 'text-gray-400'
                                     }`}>
                                     {row.status}
                                 </span>

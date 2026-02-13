@@ -28,7 +28,7 @@ import GlassCard from '../components/ui/GlassCard';
 import GlassButton from '../components/ui/GlassButton';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 // ── Platform config ─────────────────────────────────
 const PLATFORMS = [

@@ -24,7 +24,7 @@ import {
     EyeOff
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 const TYPE_CONFIG = {
     preference: { label: 'Preference', icon: Heart, color: 'text-pink-400', border: 'border-pink-500/20', bg: 'bg-pink-500/5', activeBg: 'bg-pink-500/15', dot: 'bg-pink-400' },
