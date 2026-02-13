@@ -135,7 +135,48 @@ The application uses a **hybrid rendering approach**:
 - **Double-Entry Ledger**: Every transaction is recorded as a credit or debit to ensure financial integrity.
 - **Dodo Points**: Users earn points for specific actions (logging in, completing tasks). These points can be redeemed for account credit, handled via a transactional MongoDB session.
 
-## �📂 Project Structure
+## 🧠 Features Deep Dive
+
+### 1. AI Interface Capabilities
+The core of the application is the **AI Concierge**, which goes beyond simple chat.
+
+#### 💬 Advanced Chat Interface
+- **Data Queries**: The AI has direct access to your database (read-only). You can ask "How much did we spend on ads last month?" and it will query the transaction logs to give an exact answer.
+- **Ask-Why Mode**: A dedicated mode where the AI explains *why* a certain trend is happening. It correlates data points (e.g., "Ad spend went up, but ROI went down because...") to provide reasoning.
+- **Context-Awareness**: The AI knows which page you are on. If you are on the "Transactions" page and say "Filter by high value", it understands the context immediately.
+
+#### ⚡ Task Generation via Chat
+- **Kanban Conversion**: Simply say "Remind me to review the Q3 budget next Friday". The AI uses **Intent Detection** to parse this into a structured task.
+- **Auto-Prioritization**: Based on keywords (e.g., "urgent", "critical"), the AI assigns a priority level (High/Medium/Low).
+- **Smart Assignment**: It assigns the task to the relevant owner and sets a due date automatically.
+
+#### 🎙️ Voice Note Command
+- **Transcription**: Records voice notes and transcribes them using OpenAI Whisper (or similar API).
+- **Urgency & Intent**: Analyzes the tone and content to detect urgency.
+- **Auto-Tagging**: Automatically tags the note (e.g., #finance, #meeting) for easy retrieval later.
+
+#### 📅 AI Weekly Executive Summary
+- **Changes & Results**: Every Sunday, the AI generates a snapshot of the week's performance.
+- **Key Risks**: Highlights anomalies (e.g., "Unusual spike in server costs").
+- **Recommendations**: Suggests actions for the next week based on historical data.
+
+#### 🧠 Client Notes & Memory
+- **Long-Term Memory**: The AI remembers user preferences (e.g., "User prefers conservative risk estimates").
+- **Decision Context**: Stores *why* a decision was made, so you can query it months later ("Why did we switch ad agencies in Nov?").
+
+### 2. Finance & Trust Module
+A complete financial operating system for client management.
+
+#### 💳 Payment History & Invoices
+- **Transaction Logs**: Immutable logs of every financial action.
+- **Invoice Generation**: Auto-generate PDF invoices for clients based on billable hours or milestones.
+
+#### 📉 Spend Transparency Meter
+- **Ad & Agency Costs**: Visualizes where every dollar goes.
+- **Tool Expenses**: Tracks SaaS subscriptions to identify unused tools.
+- **ROI Breakdown**: Calculates Return on Investment per campaign or project to justify spend.
+
+## 📂 Project Structure
 
 ```
 Dodo-Client-v-1/
